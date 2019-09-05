@@ -89,6 +89,7 @@ var defaultSettings = map[string]interface{}{
 	URLsKey:     defaultURLs,
 }
 
+// Helpers for testign purposes
 var fs = afero.NewOsFs()
 var now = time.Now
 
@@ -104,6 +105,26 @@ func New(dir string) (*Config, error) {
 		return nil, err
 	}
 	return conf, nil
+}
+
+func (c *Config) GetDevice() (d *Device, err error) {
+	err = c.Unmarshal(DeviceKey, &d)
+	return
+}
+
+func (c *Config) GetWindows() (w *Windows, err error) {
+	err = c.Unmarshal(WindowsKey, &w)
+	return
+}
+
+func (c *Config) GetLocation() (l *Location, err error) {
+	err = c.Unmarshal(LocationKey, &l)
+	return
+}
+
+func (c *Config) GetURLs() (u *URLs, err error) {
+	err = c.Unmarshal(URLsKey, &u)
+	return
 }
 
 func (c *Config) Unmarshal(key string, raw interface{}) error {

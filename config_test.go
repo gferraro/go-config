@@ -100,19 +100,19 @@ func TestWriting(t *testing.T) {
 
 	conf, err = New(testTomlFileDir)
 	require.NoError(t, err)
-	d2 := Device{}
-	w2 := Windows{}
-	l2 := Location{}
-	u2 := URLs{}
-	require.NoError(t, conf.Unmarshal(DeviceKey, &d2))
-	require.NoError(t, conf.Unmarshal(WindowsKey, &w2))
-	require.NoError(t, conf.Unmarshal(LocationKey, &l2))
-	require.NoError(t, conf.Unmarshal(URLsKey, &u2))
+	d2, err := conf.GetDevice()
+	require.NoError(t, err)
+	w2, err := conf.GetWindows()
+	require.NoError(t, err)
+	l2, err := conf.GetLocation()
+	require.NoError(t, err)
+	u2, err := conf.GetURLs()
+	require.NoError(t, err)
 
-	require.Equal(t, d, d2)
-	require.Equal(t, w, w2)
-	require.Equal(t, l, l2)
-	require.Equal(t, u, u2)
+	require.Equal(t, d, *d2)
+	require.Equal(t, w, *w2)
+	require.Equal(t, l, *l2)
+	require.Equal(t, u, *u2)
 	require.Equal(t, d.Name, conf.Get(DeviceKey+".name"))
 }
 
