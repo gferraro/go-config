@@ -19,6 +19,7 @@ package config
 import (
 	"path"
 	"reflect"
+	"strings"
 	"time"
 
 	"github.com/mitchellh/mapstructure"
@@ -89,6 +90,7 @@ var defaultSettings = map[string]interface{}{
 }
 
 var fs = afero.NewOsFs()
+var now = time.Now
 
 // New created a new config and loads files from the given directory
 func New(dir string) (*Config, error) {
@@ -113,7 +115,7 @@ func (c *Config) Set(key string, value interface{}) error {
 	if kind == reflect.Struct || kind == reflect.Ptr {
 		return c.setStruct(key, value)
 	}
-	c.v.Set(key, value)
+	c.set(key, value)
 	return c.writeConfig()
 }
 
@@ -127,8 +129,13 @@ func (c *Config) setStruct(key string, value interface{}) error {
 	if err != nil {
 		return err
 	}
-	c.v.Set(key, m)
+	c.set(key, m)
 	return c.writeConfig()
+}
+
+func (c *Config) set(key string, value interface{}) {
+	c.v.Set(key, value)
+	c.v.Set(strings.Split(key, ".")[0]+".updated", now())
 }
 
 func (c *Config) setDefaults() error {

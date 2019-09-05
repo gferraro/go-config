@@ -133,6 +133,27 @@ func TestDefault(t *testing.T) {
 	require.Equal(t, u, defaultURLs)
 }
 
+func TestSettingUpdated(t *testing.T) {
+	newNow()
+	newFs(t, testTomlName)
+	conf, err := New(testTomlFileDir)
+	require.NoError(t, err)
+
+	require.Equal(t, conf.Get(DeviceKey+".updated"), int64(0))
+	require.NoError(t, conf.Set(DeviceKey, randomDevice()))
+	require.Equal(t, conf.Get(DeviceKey+".updated"), now())
+	newNow()
+	require.NoError(t, conf.Set(DeviceKey, randomDevice()))
+	require.Equal(t, conf.Get(DeviceKey+".updated"), now())
+}
+
+func newNow() {
+	n := time.Now()
+	now = func() time.Time {
+		return n
+	}
+}
+
 func randomDevice() (d Device) {
 	fako.Fuzz(&d)
 	return
