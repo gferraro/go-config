@@ -1,0 +1,74 @@
+[device]
+  updated = 0
+  group = "name of gruop"
+  id = 321
+  name = "example device"
+  password = "devices password"
+  server = "the API registered to"
+
+[location]
+  updated = 0
+  accuracy = 1
+  altitude = 0
+  latitude = 45
+  longitude = 46
+
+[windows]
+  updated = 0
+  startRecording = "20:00"
+  stopRecording = "8:00"
+  powerOn = "20:00"
+  powerOff = "8:00"
+
+[recorder]
+  updated = 0
+  outputDir = "/var/spool/cptv"
+  minDiskSpaceMB = 200
+  previewDuration = 1
+  minDuration = "10s"
+  maxDuration = "10m"
+
+[motionDetection]
+  updated = 0
+  tempThresh = 2850
+  deltaThresh = 50
+  countThresh = 3
+  frameCompareGap = 45
+  oneDiffOnly = true
+  triggerFrames = 1
+  warmerOnly = true
+  edgePixels = 1
+  verbose= false
+
+[throttler]
+  updated = 0
+  active = true
+  bucketSize = "5m"
+  minRefill = "10m"
+
+
+[modems]
+updated = 0
+[[modems.list]]
+  name = "Huawei 4G modem"
+  netdev = "eth1"
+  vendorProduct = "12d1:14db"
+[[modems.list]]
+  name = "Spark 3G modem"
+  netdev = "usb0"
+  vendorProduct = "12d1:14db"
+
+[testHosts]
+  updated = 0
+  urls = [
+    "1.1.1.1",
+    "8.8.8.8"
+  ]
+
+[attiny]
+updated = 0
+[attiny.voltages]
+enable = true
+noBattery = 10
+lowBattery = 40
+fullBattery = 200
