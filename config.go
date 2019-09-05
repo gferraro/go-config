@@ -65,7 +65,8 @@ const (
 	LocationKey = "location"
 	URLsKey     = "urls"
 
-	configFileName = "config.toml"
+	DefaultConfigDir = "/etc/cacophony"
+	configFileName   = "config.toml"
 )
 
 var defaultWindows = Windows{
