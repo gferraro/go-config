@@ -5,6 +5,7 @@ go 1.12
 require (
 	github.com/TheCacophonyProject/window v0.0.0-20190821235241-ab92c2ee24b6
 	github.com/corpix/uarand v0.1.1 // indirect
+	github.com/gofrs/flock v0.7.1
 	github.com/icrowley/fake v0.0.0-20180203215853-4178557ae428 // indirect
 	github.com/markbates/inflect v1.0.4 // indirect
 	github.com/mitchellh/mapstructure v1.1.2

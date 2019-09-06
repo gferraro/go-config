@@ -17,18 +17,22 @@
 package config
 
 import (
+	"context"
+	"errors"
 	"path"
 	"reflect"
 	"strings"
 	"time"
 
+	"github.com/gofrs/flock"
 	"github.com/mitchellh/mapstructure"
 	"github.com/spf13/afero"
 	"github.com/spf13/viper"
 )
 
 type Config struct {
-	v *viper.Viper
+	v        *viper.Viper
+	fileLock *flock.Flock
 }
 
 type Device struct {
@@ -67,6 +71,7 @@ const (
 
 	DefaultConfigDir = "/etc/cacophony"
 	configFileName   = "config.toml"
+	lockRetryDelay   = 678 * time.Millisecond
 )
 
 var defaultWindows = Windows{
@@ -93,19 +98,31 @@ var defaultSettings = map[string]interface{}{
 // Helpers for testign purposes
 var fs = afero.NewOsFs()
 var now = time.Now
+var lockFilePath = func(configFile string) string {
+	return configFile + ".lock"
+}
+var lockTimeout = 5 * time.Second
 
 // New created a new config and loads files from the given directory
 func New(dir string) (*Config, error) {
-	conf := &Config{v: viper.New()}
-	conf.v.SetFs(fs)
-	conf.v.SetConfigFile(path.Join(dir, configFileName))
-	if err := conf.setDefaults(); err != nil {
+	configFile := path.Join(dir, configFileName)
+	c := &Config{
+		v:        viper.New(),
+		fileLock: flock.New(lockFilePath(configFile)),
+	}
+	c.v.SetFs(fs)
+	c.v.SetConfigFile(configFile)
+	if err := c.getFileLock(); err != nil {
 		return nil, err
 	}
-	if err := conf.v.ReadInConfig(); err != nil {
+	defer c.fileLock.Unlock()
+	if err := c.setDefaults(); err != nil {
 		return nil, err
 	}
-	return conf, nil
+	if err := c.v.ReadInConfig(); err != nil {
+		return nil, err
+	}
+	return c, nil
 }
 
 func (c *Config) GetDevice() (d *Device, err error) {
@@ -133,12 +150,41 @@ func (c *Config) Unmarshal(key string, raw interface{}) error {
 }
 
 func (c *Config) Set(key string, value interface{}) error {
+	if err := c.getFileLock(); err != nil {
+		return err
+	}
+	defer c.fileLock.Unlock()
+	if err := c.Update(); err != nil {
+		return err
+	}
 	kind := reflect.ValueOf(value).Kind()
 	if kind == reflect.Struct || kind == reflect.Ptr {
 		return c.setStruct(key, value)
 	}
 	c.set(key, value)
 	return c.writeConfig()
+}
+
+func (c *Config) Update() error {
+	if err := c.getFileLock(); err != nil {
+		return err
+	}
+	defer c.fileLock.Unlock()
+	return c.v.ReadInConfig()
+}
+
+var errNoFileLock = errors.New("failed to get lock on file")
+
+func (c *Config) getFileLock() error {
+	lockCtx, cancel := context.WithTimeout(context.Background(), lockTimeout)
+	defer cancel()
+	locked, err := c.fileLock.TryLockContext(lockCtx, lockRetryDelay)
+	if err != nil {
+		return err
+	} else if !locked {
+		return errNoFileLock
+	}
+	return nil
 }
 
 func interfaceToMap(value interface{}) (m map[string]interface{}, err error) {

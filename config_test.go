@@ -4,6 +4,7 @@ import (
 	"io/ioutil"
 	"log"
 	"math/rand"
+	"os"
 	"path"
 	"testing"
 	"time"
@@ -35,12 +36,19 @@ type AttinyConfig struct {
 	Voltages Voltages
 }
 
-func newFs(t *testing.T, file string) {
+func newFs(t *testing.T, file string) func() {
 	fs = afero.NewMemMapFs()
 	b, err := ioutil.ReadFile(file)
 	require.NoError(t, err)
 	filePath := path.Join(testTomlFileDir, configFileName)
 	require.NoError(t, afero.WriteFile(fs, filePath, b, 0644))
+	f := path.Join(os.TempDir(), filePath+".lock")
+	lockFilePath = func(p string) string {
+		return f
+	}
+	return func() {
+		os.Remove(f)
+	}
 }
 
 func printConfigFile(dir string) {
@@ -54,7 +62,7 @@ func printConfigFile(dir string) {
 }
 
 func TestReadingConfigInDir(t *testing.T) {
-	newFs(t, testTomlName)
+	defer newFs(t, testTomlName)()
 	conf, err := New(testTomlFileDir)
 	require.NoError(t, err)
 
@@ -82,8 +90,10 @@ func TestReadingConfigInDir(t *testing.T) {
 }
 
 func TestWriting(t *testing.T) {
-	newFs(t, testTomlName)
+	defer newFs(t, testTomlName)()
 	conf, err := New(testTomlFileDir)
+	require.NoError(t, err)
+	conf2, err := New(testTomlFileDir)
 	require.NoError(t, err)
 
 	d := randomDevice()
@@ -91,12 +101,9 @@ func TestWriting(t *testing.T) {
 	l := randomLocation()
 	u := randomURLs()
 	require.NoError(t, conf.Set(DeviceKey, d))
-	require.NoError(t, conf.Set(WindowsKey, w))
+	require.NoError(t, conf2.Set(WindowsKey, w))
 	require.NoError(t, conf.Set(LocationKey, &l))
-	require.NoError(t, conf.Set(URLsKey, &u))
-
-	d.Name = randString(10)
-	conf.Set(DeviceKey+".name", d.Name)
+	require.NoError(t, conf2.Set(URLsKey, &u))
 
 	conf, err = New(testTomlFileDir)
 	require.NoError(t, err)
@@ -113,11 +120,25 @@ func TestWriting(t *testing.T) {
 	require.Equal(t, w, *w2)
 	require.Equal(t, l, *l2)
 	require.Equal(t, u, *u2)
-	require.Equal(t, d.Name, conf.Get(DeviceKey+".name"))
+}
+
+func TestFileLock(t *testing.T) {
+	defer newFs(t, testTomlName)()
+	lockTimeout = time.Millisecond * 100
+
+	conf, err := New(testTomlFileDir)
+	require.NoError(t, err)
+	conf2, err := New(testTomlFileDir)
+	require.NoError(t, err)
+
+	require.NoError(t, conf.getFileLock())
+	require.Error(t, conf2.getFileLock())
+	conf.fileLock.Unlock()
+	require.NoError(t, conf2.getFileLock())
 }
 
 func TestDefault(t *testing.T) {
-	newFs(t, testTomlDefaultName)
+	defer newFs(t, testTomlDefaultName)()
 	conf, err := New(testTomlFileDir)
 	require.NoError(t, err)
 
@@ -134,8 +155,8 @@ func TestDefault(t *testing.T) {
 }
 
 func TestSettingUpdated(t *testing.T) {
+	defer newFs(t, testTomlName)()
 	newNow()
-	newFs(t, testTomlName)
 	conf, err := New(testTomlFileDir)
 	require.NoError(t, err)
 
@@ -143,7 +164,7 @@ func TestSettingUpdated(t *testing.T) {
 	require.NoError(t, conf.Set(DeviceKey, randomDevice()))
 	require.Equal(t, conf.Get(DeviceKey+".updated"), now())
 	newNow()
-	require.NoError(t, conf.Set(DeviceKey, randomDevice()))
+	require.NoError(t, conf.Set(DeviceKey+".name", randString(10)))
 	require.Equal(t, conf.Get(DeviceKey+".updated"), now())
 }
 
