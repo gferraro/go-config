@@ -125,6 +125,10 @@ func New(dir string) (*Config, error) {
 	return c, nil
 }
 
+func (c *Config) AllSettings() map[string]interface{} {
+	return c.v.AllSettings()
+}
+
 func (c *Config) GetDevice() (d *Device, err error) {
 	err = c.Unmarshal(DeviceKey, &d)
 	return
