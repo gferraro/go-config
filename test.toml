@@ -15,51 +15,57 @@
 
 [windows]
   updated = 0
-  startRecording = "20:00"
-  stopRecording = "8:00"
-  powerOn = "20:00"
-  powerOff = "8:00"
+  start-recording = "20:00"
+  stop-recording = "8:00"
+  power-on = "20:00"
+  power-off = "8:00"
 
 [recorder]
   updated = 0
-  outputDir = "/var/spool/cptv"
-  minDiskSpaceMB = 200
-  previewDuration = 1
-  minDuration = "10s"
-  maxDuration = "10m"
+  output-dir = "/var/spool/cptv"
+  min-disk-space-mb = 200
+  preview-duration = 1
+  min-duration = "10s"
+  max-duration = "10m"
 
-[motionDetection]
+[lepton]
+  spi-Speed = 2000000
+  Frame-Output = "/var/run/lepton-frames"
+
+[motion-Detection]
   updated = 0
-  tempThresh = 2850
-  deltaThresh = 50
-  countThresh = 3
-  frameCompareGap = 45
-  oneDiffOnly = true
-  triggerFrames = 1
-  warmerOnly = true
-  edgePixels = 1
+  temp-thresh = 2850
+  delta-thresh = 50
+  count-thresh = 3
+  frame-compare-gap = 45
+  one-diff-only = true
+  trigger-frames = 1
+  warmer-only = true
+  edge-pixels = 1
   verbose= false
 
 [throttler]
   updated = 0
   active = true
-  bucketSize = "5m"
-  minRefill = "10m"
+  bucket-Size = "5m"
+  min-Refill = "10m"
 
 
 [modems]
 updated = 0
 [[modems.list]]
   name = "Huawei 4G modem"
-  netdev = "eth1"
-  vendorProduct = "12d1:14db"
+  net-dev = "eth1"
+  vendor-Product = "12d1:14db"
 [[modems.list]]
   name = "Spark 3G modem"
-  netdev = "usb0"
-  vendorProduct = "12d1:14db"
+  net-dev = "usb0"
+  vendor-Product = "12d1:14db"
 
-[testHosts]
+[test-Hosts]
   updated = 0
+  ping-wait-time = "30s"
+  ping-retries = 5
   urls = [
     "1.1.1.1",
     "8.8.8.8"
@@ -69,6 +75,6 @@ updated = 0
 updated = 0
 [attiny.voltages]
 enable = true
-noBattery = 10
-lowBattery = 40
-fullBattery = 200
+no-battery = 10
+low-battery = 40
+full-battery = 200

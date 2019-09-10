@@ -51,23 +51,23 @@ type Location struct {
 }
 
 type Windows struct {
-	StartRecording string
-	StopRecording  string
-	PowerOn        string
-	PowerOff       string
+	StartRecording string `mapstructure:"start-recording"`
+	StopRecording  string `mapstructure:"stop-recording"`
+	PowerOn        string `mapstructure:"power-on"`
+	PowerOff       string `mapstructure:"power-off"`
 }
 
-type URLs struct {
-	PingTests []string
-	ProdAPI   string
-	TestAPI   string
+type TestHosts struct {
+	URLs         []string
+	PingWaitTime time.Duration `mapstructure:"ping-wait-time"`
+	PingRetries  int           `mapstructure:"ping-retries"`
 }
 
 const (
-	DeviceKey   = "device"
-	WindowsKey  = "windows"
-	LocationKey = "location"
-	URLsKey     = "urls"
+	DeviceKey    = "device"
+	WindowsKey   = "windows"
+	LocationKey  = "location"
+	TestHostsKey = "test-hosts"
 
 	DefaultConfigDir = "/etc/cacophony"
 	configFileName   = "config.toml"
@@ -84,15 +84,15 @@ var defaultLocation = Location{
 	Latitude:  12,
 	Longitude: 12,
 }
-var defaultURLs = URLs{
-	PingTests: []string{"1.1.1.1", "8.8.8.8"},
-	ProdAPI:   "https://api.cacophony.org.nz",
-	TestAPI:   "https://api-test.cacophony.org.nz",
+var defaultTestHosts = TestHosts{
+	URLs:         []string{"1.1.1.1", "8.8.8.8"},
+	PingRetries:  5,
+	PingWaitTime: time.Second * 30,
 }
 var defaultSettings = map[string]interface{}{
-	WindowsKey:  defaultWindows,
-	LocationKey: defaultLocation,
-	URLsKey:     defaultURLs,
+	WindowsKey:   defaultWindows,
+	LocationKey:  defaultLocation,
+	TestHostsKey: defaultTestHosts,
 }
 
 // Helpers for testign purposes
@@ -140,8 +140,8 @@ func (c *Config) GetLocation() (l *Location, err error) {
 	return
 }
 
-func (c *Config) GetURLs() (u *URLs, err error) {
-	err = c.Unmarshal(URLsKey, &u)
+func (c *Config) GetTestHosts() (u *TestHosts, err error) {
+	err = c.Unmarshal(TestHostsKey, &u)
 	return
 }
 

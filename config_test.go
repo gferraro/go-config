@@ -99,11 +99,11 @@ func TestWriting(t *testing.T) {
 	d := randomDevice()
 	w := randomWindows()
 	l := randomLocation()
-	u := randomURLs()
+	h := randomTestHosts()
 	require.NoError(t, conf.Set(DeviceKey, d))
 	require.NoError(t, conf2.Set(WindowsKey, w))
 	require.NoError(t, conf.Set(LocationKey, &l))
-	require.NoError(t, conf2.Set(URLsKey, &u))
+	require.NoError(t, conf2.Set(TestHostsKey, &h))
 
 	conf, err = New(testTomlFileDir)
 	require.NoError(t, err)
@@ -113,13 +113,13 @@ func TestWriting(t *testing.T) {
 	require.NoError(t, err)
 	l2, err := conf.GetLocation()
 	require.NoError(t, err)
-	u2, err := conf.GetURLs()
+	h2, err := conf.GetTestHosts()
 	require.NoError(t, err)
 
 	require.Equal(t, d, *d2)
 	require.Equal(t, w, *w2)
 	require.Equal(t, l, *l2)
-	require.Equal(t, u, *u2)
+	require.Equal(t, h, *h2)
 }
 
 func TestFileLock(t *testing.T) {
@@ -144,14 +144,14 @@ func TestDefault(t *testing.T) {
 
 	w := Windows{}
 	l := Location{}
-	u := URLs{}
+	h := TestHosts{}
 	require.NoError(t, conf.Unmarshal(WindowsKey, &w))
 	require.NoError(t, conf.Unmarshal(LocationKey, &l))
-	require.NoError(t, conf.Unmarshal(URLsKey, &u))
+	require.NoError(t, conf.Unmarshal(TestHostsKey, &h))
 
 	require.Equal(t, w, defaultWindows)
 	require.Equal(t, l, defaultLocation)
-	require.Equal(t, u, defaultURLs)
+	require.Equal(t, h, defaultTestHosts)
 }
 
 func TestSettingUpdated(t *testing.T) {
@@ -190,11 +190,11 @@ func randomLocation() (l Location) {
 	return
 }
 
-func randomURLs() URLs {
-	return URLs{
-		PingTests: []string{randString(10), randString(20), randString(15)},
-		ProdAPI:   randString(13),
-		TestAPI:   randString(14),
+func randomTestHosts() TestHosts {
+	return TestHosts{
+		URLs:         []string{randString(10), randString(20), randString(15)},
+		PingRetries:  int(randSrc.Int63()),
+		PingWaitTime: time.Duration(randSrc.Int63()) * time.Second,
 	}
 }
 
