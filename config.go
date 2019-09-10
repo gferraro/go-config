@@ -101,7 +101,7 @@ var now = time.Now
 var lockFilePath = func(configFile string) string {
 	return configFile + ".lock"
 }
-var lockTimeout = 5 * time.Second
+var lockTimeout = 10 * time.Second
 
 // New created a new config and loads files from the given directory
 func New(dir string) (*Config, error) {
@@ -123,10 +123,6 @@ func New(dir string) (*Config, error) {
 		return nil, err
 	}
 	return c, nil
-}
-
-func (c *Config) AllSettings() map[string]interface{} {
-	return c.v.AllSettings()
 }
 
 func (c *Config) GetDevice() (d *Device, err error) {
