@@ -1,0 +1,34 @@
+project_name: cacophony-config
+
+release:
+  github:
+    owner: TheCacophonyProject
+    name: cacophony-config
+  name_template: '{{.Tag}}'
+
+builds:
+- goos:
+  - linux
+  goarch:
+  - arm
+  goarm:
+  - "7"
+  main: ./cmd/config
+  ldflags: -s -w -X main.version={{.Version}}
+  binary: cacophony-config
+
+nfpms:
+- vendor: The Cacophony Project
+  homepage: http://cacophony.org.nz/
+  maintainer: Cacophony Developers <coredev@cacophony.org.nz>
+  description: Helper for cacophony config files
+  license: GPL v3.0
+  name_template: "{{ .ProjectName }}_{{ .Version }}_{{ .Arch }}"
+  formats:
+    - deb
+  bindir: /usr/bin
+
+checksum:
+  name_template: '{{ .ProjectName }}_{{ .Version }}_checksums.txt'
+
+dist: dist
