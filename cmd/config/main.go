@@ -137,8 +137,8 @@ func yamlToStruct(configFile string, s interface{}) error {
 }
 
 type rawAttinyConfig struct {
-	PiWakeUp string         `yaml:"pi-wake-time" mapstructure:"windows.poweron"`
-	PiSleep  string         `yaml:"pi-sleep-time" mapstructure:"windows.poweroff"`
+	PiWakeUp string         `yaml:"pi-wake-time" mapstructure:"windows.power-on"`
+	PiSleep  string         `yaml:"pi-sleep-time" mapstructure:"windows.power-off"`
 	Voltages attinyVoltages `yaml:"voltages" mapstructure:"battery"`
 }
 
