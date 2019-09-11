@@ -144,9 +144,9 @@ type rawAttinyConfig struct {
 
 type attinyVoltages struct {
 	Enable      bool   `yaml:"enable" mapstructure:"enable-voltage-readings"`
-	NoBattery   uint16 `yaml:"no-battery" mapstructure:"no-battery-voltage"`
-	LowBattery  uint16 `yaml:"low-battery" mapstructure:"low-battery-voltage"`
-	FullBattery uint16 `yaml:"full-battery" mapstructure:"full-battery-voltage"`
+	NoBattery   uint16 `yaml:"no-battery" mapstructure:"no-battery-reading"`
+	LowBattery  uint16 `yaml:"low-battery" mapstructure:"low-battery-reading"`
+	FullBattery uint16 `yaml:"full-battery" mapstructure:"full-battery-reading"`
 }
 
 func processModem(configDir string) (interface{}, error) {
@@ -155,7 +155,7 @@ func processModem(configDir string) (interface{}, error) {
 }
 
 type rawModemdConfig struct {
-	ModemsConfig      []modemConfig `yaml:"modems" mapstructure:"modems.list"`
+	ModemsConfig      []modemConfig `yaml:"modems" mapstructure:"modemd.modems"`
 	TestInterval      time.Duration `yaml:"test-interval" mapstructure:"modemd.test-interval"`
 	PowerPin          string        `yaml:"power-pin" mapstructure:"gpio.modem-power"`
 	InitialOnTime     time.Duration `yaml:"initial-on-time" mapstructure:"modemd.initial-on-duration"`
@@ -200,17 +200,17 @@ func processThermalRecorder(configDir string) (interface{}, error) {
 }
 
 type rawThermalRecorder struct {
-	OutputDir    string          `yaml:"output-dir" mapstructure:"recorder.output-dir"`
-	MinDiskSpace uint64          `yaml:"min-disk-space" mapstructure:"recorder.min-disk-space"`
+	OutputDir    string          `yaml:"output-dir" mapstructure:"thermal-recorder.output-dir"`
+	MinDiskSpace uint64          `yaml:"min-disk-space" mapstructure:"thermal-recorder.min-disk-space-mb"`
 	Recorder     recorderConfig  `mapstructure:",squash"`
 	Motion       motionConfig    `mapstructure:",squash"`
 	Throttler    throttlerConfig `mapstructure:",squash"`
 }
 
 type recorderConfig struct {
-	MinSecs                int    `yaml:"min-secs" mapstructure:"recorder.min-secs"`
-	MaxSecs                int    `yaml:"max-secs" mapstructure:"recorder.max-secs"`
-	PreviewSecs            int    `yaml:"preview-secs" mapstructure:"recorder.preview-secs"`
+	MinSecs                int    `yaml:"min-secs" mapstructure:"thermal-recorder.min-secs"`
+	MaxSecs                int    `yaml:"max-secs" mapstructure:"thermal-recorder.max-secs"`
+	PreviewSecs            int    `yaml:"preview-secs" mapstructure:"thermal-recorder.preview-secs"`
 	UseSunriseSunsetWindow bool   `yaml:"sunrise-sunset" mapstructure:"-"`
 	SunriseOffset          int    `yaml:"sunrise-offset" mapstructure:"-"`
 	SunsetOffset           int    `yaml:"sunset-offset" mapstructure:"-"`
@@ -221,22 +221,22 @@ type recorderConfig struct {
 }
 
 type motionConfig struct {
-	DynamicThreshold bool   `yaml:"dynamic-thresh" mapstructure:"motion-detection.min-secs"`
-	TempThresh       uint16 `yaml:"temp-thresh" mapstructure:"motion-detection.temp-thresh"`
-	DeltaThresh      uint16 `yaml:"delta-thresh" mapstructure:"motion-detection.delta-thresh"`
-	CountThresh      int    `yaml:"count-thresh" mapstructure:"motion-detection.count-thresh"`
-	FrameCompareGap  int    `yaml:"frame-compare-gap" mapstructure:"motion-detection.frame-compare-gap"`
-	UseOneDiffOnly   bool   `yaml:"one-diff-only" mapstructure:"motion-detection.use-one-diff-only"`
-	TriggerFrames    int    `yaml:"trigger-frames" mapstructure:"motion-detection.trigger-frames"`
-	WarmerOnly       bool   `yaml:"warmer-only" mapstructure:"motion-detection.warmer-only"`
-	EdgePixels       int    `yaml:"edge-pixels" mapstructure:"motion-detection.edge-pixels"`
-	Verbose          bool   `yaml:"verbose" mapstructure:"motion-detection.verbose"`
+	DynamicThreshold bool   `yaml:"dynamic-thresh" mapstructure:"thermal-motion.min-secs"`
+	TempThresh       uint16 `yaml:"temp-thresh" mapstructure:"thermal-motion.temp-thresh"`
+	DeltaThresh      uint16 `yaml:"delta-thresh" mapstructure:"thermal-motion.delta-thresh"`
+	CountThresh      int    `yaml:"count-thresh" mapstructure:"thermal-motion.count-thresh"`
+	FrameCompareGap  int    `yaml:"frame-compare-gap" mapstructure:"thermal-motion.frame-compare-gap"`
+	UseOneDiffOnly   bool   `yaml:"one-diff-only" mapstructure:"thermal-motion.use-one-diff-only"`
+	TriggerFrames    int    `yaml:"trigger-frames" mapstructure:"thermal-motion.trigger-frames"`
+	WarmerOnly       bool   `yaml:"warmer-only" mapstructure:"thermal-motion.warmer-only"`
+	EdgePixels       int    `yaml:"edge-pixels" mapstructure:"thermal-motion.edge-pixels"`
+	Verbose          bool   `yaml:"verbose" mapstructure:"thermal-motion.verbose"`
 }
 
 type throttlerConfig struct {
-	ApplyThrottling bool          `yaml:"apply-throttling" mapstructure:"throttle.active"`
-	BucketSize      time.Duration `yaml:"bucket-size" mapstructure:"throttle.bucket-size"`
-	MinRefill       time.Duration `yaml:"min-refill" mapstructure:"throttle.min-refill"`
+	ApplyThrottling bool          `yaml:"apply-throttling" mapstructure:"thermal-throttler.active"`
+	BucketSize      time.Duration `yaml:"bucket-size" mapstructure:"thermal-throttler.bucket-size"`
+	MinRefill       time.Duration `yaml:"min-refill" mapstructure:"thermal-throttler.min-refill"`
 }
 
 func processLocation(configDir string) (interface{}, error) {
@@ -247,7 +247,7 @@ func processLocation(configDir string) (interface{}, error) {
 type rawLocation struct {
 	Latitude     float32   `yaml:"latitude" mapstructure:"locaiton.latitude"`
 	Longitude    float32   `yaml:"longitude" mapstructure:"locaiton.longitude"`
-	LocTimestamp time.Time `yaml:"timestamp" mapstructure:"locaiton.timestamp"`
+	LocTimestamp time.Time `yaml:"timestamp" mapstructure:"locaiton.updated"`
 	Altitude     float32   `yaml:"altitude" mapstructure:"locaiton.altitude"`
 	Accuracy     float32   `yaml:"accuracy" mapstructure:"locaiton.accuracy"`
 }
@@ -264,7 +264,7 @@ type rawDeviceConfig struct {
 	ServerURL  string `yaml:"server-url" mapstructure:"device.server"`
 	Group      string `yaml:"group" mapstructure:"device.group"`
 	DeviceName string `yaml:"device-name" mapstructure:"device.name"`
-	Password   string `yaml:"password" mapstructure:"device.password"`
+	Password   string `yaml:"password" mapstructure:"secrets.device-password"`
 	DeviceID   int    `yaml:"device-id" mapstructure:"device.id"`
 }
 
@@ -274,5 +274,5 @@ func processManagementd(configDir string) (interface{}, error) {
 }
 
 type rawManagementdConfig struct {
-	Port int `yaml:"port" mapstructure:"managementd.port"`
+	Port int `yaml:"port" mapstructure:"ports.managementd"`
 }
