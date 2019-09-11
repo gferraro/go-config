@@ -9,32 +9,17 @@ import (
 	"testing"
 	"time"
 
-	"github.com/TheCacophonyProject/window"
 	"github.com/spf13/afero"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/wawandco/fako"
 )
 
-const tomlFileString = `
-`
 const (
 	testTomlName        = "test.toml"
 	testTomlDefaultName = "test-default.toml"
 	testTomlFileDir     = "/"
 )
-
-type Voltages struct {
-	Enable      bool   // Enable reading voltage through ATtiny
-	NoBattery   uint16 // If voltage reading is less than this it is not powered by a battery
-	LowBattery  uint16 // Voltage of a low battery
-	FullBattery uint16 // Voltage of a full battery
-}
-
-type AttinyConfig struct {
-	OnWindow *window.Window
-	Voltages Voltages
-}
 
 func newFs(t *testing.T, file string) func() {
 	fs = afero.NewMemMapFs()
@@ -66,27 +51,77 @@ func TestReadingConfigInDir(t *testing.T) {
 	conf, err := New(testTomlFileDir)
 	require.NoError(t, err)
 
-	// Get device struct
-	d := &Device{}
-	require.NoError(t, conf.Unmarshal(DeviceKey, d))
+	device := Device{}
+	deviceChanges := Device{}
+	deviceChanges.ID = 789
+	assert.NoError(t, conf.Unmarshal(DeviceKey, &device))
+	assert.Equal(t, deviceChanges, device)
 
-	rawConfig, err := New(testTomlFileDir)
-	assert.NoError(t, err)
+	windows := DefaultWindows
+	windowChanges := DefaultWindows
+	windowChanges.PowerOff = "+1s"
+	assert.NoError(t, conf.Unmarshal(WindowsKey, &windows))
+	assert.Equal(t, windowChanges, windows)
 
-	voltagesRaw := &Voltages{}
-	rawConfig.Unmarshal("attiny.voltages", voltagesRaw)
-	windowRaw := &Windows{}
-	rawConfig.Unmarshal(WindowsKey, windowRaw)
-	locationRaw := &Location{}
-	rawConfig.Unmarshal(LocationKey, locationRaw)
+	location := DefaultLocation
+	locationChanges := DefaultLocation
+	locationChanges.Accuracy = 543
+	assert.NoError(t, conf.Unmarshal(LocationKey, &location))
+	assert.Equal(t, locationChanges, location)
 
-	_, err = window.New(
-		windowRaw.PowerOn,
-		windowRaw.PowerOff,
-		float64(locationRaw.Latitude),
-		float64(locationRaw.Longitude))
-	require.NoError(t, err)
+	testHosts := DefaultTestHosts
+	testHostsChanges := DefaultTestHosts
+	testHostsChanges.PingRetries = 333
+	assert.NoError(t, conf.Unmarshal(TestHostsKey, &testHosts))
+	assert.Equal(t, testHostsChanges, testHosts)
 
+	battery := Battery{}
+	batteryChanges := Battery{}
+	batteryChanges.NoBattery = 10
+	assert.NoError(t, conf.Unmarshal(BatteryKey, &battery))
+	assert.Equal(t, batteryChanges, battery)
+
+	modemd := DefaultModemd
+	modemdChanges := DefaultModemd
+	modemdChanges.ConnectionTimeout = time.Second * 21
+	assert.NoError(t, conf.Unmarshal(ModemdKey, &modemd))
+	assert.Equal(t, modemdChanges, modemd)
+
+	lepton := DefaultLepton
+	leptonChanges := DefaultLepton
+	leptonChanges.SPISpeed = 2
+	assert.NoError(t, conf.Unmarshal(LeptonKey, &lepton))
+	assert.Equal(t, leptonChanges, lepton)
+
+	thermalRecorder := DefaultThermalRecorder
+	thermalRecorderChanges := DefaultThermalRecorder
+	thermalRecorderChanges.MaxSecs = 321
+	assert.NoError(t, conf.Unmarshal(ThermalRecorderKey, &thermalRecorder))
+	assert.Equal(t, thermalRecorderChanges, thermalRecorder)
+
+	thermalThrottler := DefaultThermalThrottler
+	thermalThrottlerChanges := DefaultThermalThrottler
+	thermalThrottlerChanges.BucketSize = time.Second * 16
+	assert.NoError(t, conf.Unmarshal(ThermalThrottlerKey, &thermalThrottler))
+	assert.Equal(t, thermalThrottlerChanges, thermalThrottler)
+
+	ports := DefaultPorts
+	portsChanges := DefaultPorts
+	portsChanges.Managementd = 3
+	assert.NoError(t, conf.Unmarshal(PortsKey, &ports))
+	assert.Equal(t, portsChanges, ports)
+
+	secrets := Secrets{}
+	secretsChanges := Secrets{}
+	secretsChanges.DevicePassword = "pass"
+	assert.NoError(t, conf.Unmarshal(SecretsKey, &secrets))
+	assert.Equal(t, secretsChanges, secrets)
+
+	thermalMotion := DefaultThermalMotion
+	thermalMotionChanges := DefaultThermalMotion
+	thermalMotionChanges.TempThresh = 398
+	assert.NoError(t, conf.Unmarshal(ThermalMotionKey, &thermalMotion))
+	assert.Equal(t, thermalMotionChanges, thermalMotion)
 }
 
 func TestWriting(t *testing.T) {
@@ -107,19 +142,19 @@ func TestWriting(t *testing.T) {
 
 	conf, err = New(testTomlFileDir)
 	require.NoError(t, err)
-	d2, err := conf.GetDevice()
-	require.NoError(t, err)
-	w2, err := conf.GetWindows()
-	require.NoError(t, err)
-	l2, err := conf.GetLocation()
-	require.NoError(t, err)
-	h2, err := conf.GetTestHosts()
-	require.NoError(t, err)
+	d2 := Device{}
+	require.NoError(t, conf.Unmarshal(DeviceKey, &d2))
+	w2 := Windows{}
+	require.NoError(t, conf.Unmarshal(WindowsKey, &w2))
+	l2 := Location{}
+	require.NoError(t, conf.Unmarshal(LocationKey, &l2))
+	h2 := TestHosts{}
+	require.NoError(t, conf.Unmarshal(TestHostsKey, &h2))
 
-	require.Equal(t, d, *d2)
-	require.Equal(t, w, *w2)
-	require.Equal(t, l, *l2)
-	require.Equal(t, h, *h2)
+	require.Equal(t, d, d2)
+	require.Equal(t, w, w2)
+	require.Equal(t, l, l2)
+	require.Equal(t, h, h2)
 }
 
 func TestFileLock(t *testing.T) {
@@ -137,33 +172,15 @@ func TestFileLock(t *testing.T) {
 	require.NoError(t, conf2.getFileLock())
 }
 
-func TestDefault(t *testing.T) {
-	defer newFs(t, testTomlDefaultName)()
-	conf, err := New(testTomlFileDir)
-	require.NoError(t, err)
-
-	w := Windows{}
-	l := Location{}
-	h := TestHosts{}
-	require.NoError(t, conf.Unmarshal(WindowsKey, &w))
-	require.NoError(t, conf.Unmarshal(LocationKey, &l))
-	require.NoError(t, conf.Unmarshal(TestHostsKey, &h))
-
-	require.Equal(t, w, defaultWindows)
-	require.Equal(t, l, defaultLocation)
-	require.Equal(t, h, defaultTestHosts)
-}
-
 func TestSettingUpdated(t *testing.T) {
 	defer newFs(t, testTomlName)()
 	newNow()
 	conf, err := New(testTomlFileDir)
 	require.NoError(t, err)
 
-	require.Equal(t, conf.Get(DeviceKey+".updated"), int64(0))
 	require.NoError(t, conf.Set(DeviceKey, randomDevice()))
 	require.Equal(t, conf.Get(DeviceKey+".updated"), now())
-	newNow()
+
 	require.NoError(t, conf.Set(DeviceKey+".name", randString(10)))
 	require.Equal(t, conf.Get(DeviceKey+".updated"), now())
 }

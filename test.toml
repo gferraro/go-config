@@ -1,80 +1,38 @@
 [device]
-  updated = 0
-  group = "name of gruop"
-  id = 321
-  name = "example device"
-  password = "devices password"
-  server = "the API registered to"
+  id = 789
 
 [location]
-  updated = 0
-  accuracy = 1
-  altitude = 0
-  latitude = 45
-  longitude = 46
+  accuracy = 543
 
 [windows]
-  updated = 0
-  start-recording = "20:00"
-  stop-recording = "8:00"
-  power-on = "20:00"
-  power-off = "8:00"
+  power-off = "+1s"
 
-[recorder]
-  updated = 0
-  output-dir = "/var/spool/cptv"
-  min-disk-space-mb = 200
-  preview-duration = 1
-  min-duration = "10s"
-  max-duration = "10m"
+[thermal-recorder]
+  max-secs = 321
 
 [lepton]
-  spi-Speed = 2000000
-  Frame-Output = "/var/run/lepton-frames"
+  spi-speed = 2
 
-[motion-Detection]
-  updated = 0
-  temp-thresh = 2850
-  delta-thresh = 50
-  count-thresh = 3
-  frame-compare-gap = 45
-  one-diff-only = true
-  trigger-frames = 1
-  warmer-only = true
-  edge-pixels = 1
-  verbose= false
+[thermal-motion]
+  temp-thresh = 398
 
-[throttler]
-  updated = 0
-  active = true
-  bucket-Size = "5m"
-  min-Refill = "10m"
+[thermal-throttler]
+  bucket-size = "16s"
 
+[test-hosts]
+  ping-retries = 333
 
-[modems]
-updated = 0
-[[modems.list]]
-  name = "Huawei 4G modem"
-  net-dev = "eth1"
-  vendor-Product = "12d1:14db"
-[[modems.list]]
-  name = "Spark 3G modem"
-  net-dev = "usb0"
-  vendor-Product = "12d1:14db"
+[battery]
+  no-battery = 10
 
-[test-Hosts]
-  updated = 0
-  ping-wait-time = "30s"
-  ping-retries = 5
-  urls = [
-    "1.1.1.1",
-    "8.8.8.8"
-  ]
+[modemd]
+  connection-timeout = "21s"
 
-[attiny]
-updated = 0
-[attiny.voltages]
-enable = true
-no-battery = 10
-low-battery = 40
-full-battery = 200
+[ports]
+  managementd = 3
+
+[secrets]
+  device-password = "pass"
+
+[gpio]
+  thermal-camera-power = "a gpio pin"
