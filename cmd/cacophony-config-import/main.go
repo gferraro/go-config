@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"io/ioutil"
 	"log"
 	"os"
@@ -18,8 +19,8 @@ import (
 var version = "<not set>"
 
 type Args struct {
-	MakeToml bool   `args:"--make-toml" help:"make toml config file from yaml config files"`
-	Dir      string `args:"--dir" help:"config directory"`
+	Dir   string `args:"--dir" help:"config directory"`
+	Force bool   `args:"--force" help:"will override existing config file"`
 }
 
 func (Args) Version() string {
@@ -44,19 +45,12 @@ func runMain() error {
 	log.SetFlags(0)
 	log.Printf("running version: %s", version)
 	args := procArgs()
-
-	if args.MakeToml {
-		return makeToml(args)
-	}
-	return nil
-}
-
-func makeToml(args Args) error {
-	log.Println("making toml config")
-
 	v := viper.New()
-	v.SetConfigFile(path.Join(args.Dir, "config.toml"))
-
+	configFile := path.Join(args.Dir, "config.toml")
+	if _, err := os.Stat(configFile); err == nil && !args.Force {
+		return fmt.Errorf("config file `%s` alread exists", configFile)
+	}
+	v.SetConfigFile(configFile)
 	for _, f := range configProcessingFuncs {
 		s, err := f(args.Dir)
 		if err != nil {
