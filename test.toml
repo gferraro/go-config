@@ -1,0 +1,38 @@
+[device]
+  id = 789
+
+[location]
+  accuracy = 543
+
+[windows]
+  power-off = "+1s"
+
+[thermal-recorder]
+  max-secs = 321
+
+[lepton]
+  spi-speed = 2
+
+[thermal-motion]
+  temp-thresh = 398
+
+[thermal-throttler]
+  bucket-size = "16s"
+
+[test-hosts]
+  ping-retries = 333
+
+[battery]
+  no-battery-reading = 10
+
+[modemd]
+  connection-timeout = "21s"
+
+[ports]
+  managementd = 3
+
+[secrets]
+  device-password = "pass"
+
+[gpio]
+  thermal-camera-power = "a gpio pin"
