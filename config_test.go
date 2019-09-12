@@ -57,20 +57,20 @@ func TestReadingConfigInDir(t *testing.T) {
 	assert.NoError(t, conf.Unmarshal(DeviceKey, &device))
 	assert.Equal(t, deviceChanges, device)
 
-	windows := DefaultWindows
-	windowChanges := DefaultWindows
+	windows := DefaultWindows()
+	windowChanges := DefaultWindows()
 	windowChanges.PowerOff = "+1s"
 	assert.NoError(t, conf.Unmarshal(WindowsKey, &windows))
 	assert.Equal(t, windowChanges, windows)
 
-	location := DefaultLocation
-	locationChanges := DefaultLocation
+	location := DefaultLocation()
+	locationChanges := DefaultLocation()
 	locationChanges.Accuracy = 543
 	assert.NoError(t, conf.Unmarshal(LocationKey, &location))
 	assert.Equal(t, locationChanges, location)
 
-	testHosts := DefaultTestHosts
-	testHostsChanges := DefaultTestHosts
+	testHosts := DefaultTestHosts()
+	testHostsChanges := DefaultTestHosts()
 	testHostsChanges.PingRetries = 333
 	assert.NoError(t, conf.Unmarshal(TestHostsKey, &testHosts))
 	assert.Equal(t, testHostsChanges, testHosts)
@@ -81,32 +81,32 @@ func TestReadingConfigInDir(t *testing.T) {
 	assert.NoError(t, conf.Unmarshal(BatteryKey, &battery))
 	assert.Equal(t, batteryChanges, battery)
 
-	modemd := DefaultModemd
-	modemdChanges := DefaultModemd
+	modemd := DefaultModemd()
+	modemdChanges := DefaultModemd()
 	modemdChanges.ConnectionTimeout = time.Second * 21
 	assert.NoError(t, conf.Unmarshal(ModemdKey, &modemd))
 	assert.Equal(t, modemdChanges, modemd)
 
-	lepton := DefaultLepton
-	leptonChanges := DefaultLepton
+	lepton := DefaultLepton()
+	leptonChanges := DefaultLepton()
 	leptonChanges.SPISpeed = 2
 	assert.NoError(t, conf.Unmarshal(LeptonKey, &lepton))
 	assert.Equal(t, leptonChanges, lepton)
 
-	thermalRecorder := DefaultThermalRecorder
-	thermalRecorderChanges := DefaultThermalRecorder
+	thermalRecorder := DefaultThermalRecorder()
+	thermalRecorderChanges := DefaultThermalRecorder()
 	thermalRecorderChanges.MaxSecs = 321
 	assert.NoError(t, conf.Unmarshal(ThermalRecorderKey, &thermalRecorder))
 	assert.Equal(t, thermalRecorderChanges, thermalRecorder)
 
-	thermalThrottler := DefaultThermalThrottler
-	thermalThrottlerChanges := DefaultThermalThrottler
+	thermalThrottler := DefaultThermalThrottler()
+	thermalThrottlerChanges := DefaultThermalThrottler()
 	thermalThrottlerChanges.BucketSize = time.Second * 16
 	assert.NoError(t, conf.Unmarshal(ThermalThrottlerKey, &thermalThrottler))
 	assert.Equal(t, thermalThrottlerChanges, thermalThrottler)
 
-	ports := DefaultPorts
-	portsChanges := DefaultPorts
+	ports := DefaultPorts()
+	portsChanges := DefaultPorts()
 	portsChanges.Managementd = 3
 	assert.NoError(t, conf.Unmarshal(PortsKey, &ports))
 	assert.Equal(t, portsChanges, ports)
@@ -117,8 +117,8 @@ func TestReadingConfigInDir(t *testing.T) {
 	assert.NoError(t, conf.Unmarshal(SecretsKey, &secrets))
 	assert.Equal(t, secretsChanges, secrets)
 
-	thermalMotion := DefaultThermalMotion
-	thermalMotionChanges := DefaultThermalMotion
+	thermalMotion := DefaultThermalMotion()
+	thermalMotionChanges := DefaultThermalMotion()
 	thermalMotionChanges.TempThresh = 398
 	assert.NoError(t, conf.Unmarshal(ThermalMotionKey, &thermalMotion))
 	assert.Equal(t, thermalMotionChanges, thermalMotion)

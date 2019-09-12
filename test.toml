@@ -23,7 +23,7 @@
   ping-retries = 333
 
 [battery]
-  no-battery = 10
+  no-battery-reading = 10
 
 [modemd]
   connection-timeout = "21s"
