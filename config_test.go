@@ -64,11 +64,17 @@ func TestReadingConfigInDir(t *testing.T) {
 	assert.NoError(t, conf.Unmarshal(WindowsKey, &windows))
 	assert.Equal(t, windowChanges, windows)
 
-	location := DefaultLocation()
-	locationChanges := DefaultLocation()
+	var location Location
+	locationChanges := Location{}
 	locationChanges.Accuracy = 543
 	assert.NoError(t, conf.Unmarshal(LocationKey, &location))
 	assert.Equal(t, locationChanges, location)
+
+	windowLocation := DefaultWindowLocation()
+	windowLocationChanges := DefaultWindowLocation()
+	windowLocationChanges.Accuracy = 543
+	assert.NoError(t, conf.Unmarshal(LocationKey, &windowLocation))
+	assert.Equal(t, windowLocationChanges, windowLocation)
 
 	testHosts := DefaultTestHosts()
 	testHostsChanges := DefaultTestHosts()

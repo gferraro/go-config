@@ -25,7 +25,8 @@ type Location struct {
 	Longitude float32
 }
 
-func DefaultLocation() Location {
+// Default location used when setting windows relative to sunset/sunrise
+func DefaultWindowLocation() Location {
 	return Location{
 		Latitude:  -43.5321,
 		Longitude: 172.6362,
