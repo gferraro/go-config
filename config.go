@@ -87,7 +87,7 @@ func (c *Config) Set(key string, value interface{}) error {
 		return c.setStruct(key, value)
 	}
 	c.set(key, value)
-	return c.writeConfig()
+	return c.v.WriteConfig()
 }
 
 func (c *Config) Update() error {
@@ -99,9 +99,11 @@ func (c *Config) Update() error {
 }
 
 // TODO Only update if given time is after the "udpate" field of the section updating and set "update" field to given time if updating
+/*
 func (c *Config) StrictSet(key string, value interface{}, time time.Time) error {
 	return nil
 }
+*/
 
 var errNoFileLock = errors.New("failed to get lock on file")
 
@@ -128,16 +130,12 @@ func (c *Config) setStruct(key string, value interface{}) error {
 		return err
 	}
 	c.set(key, m)
-	return c.writeConfig()
+	return c.v.WriteConfig()
 }
 
 func (c *Config) set(key string, value interface{}) {
 	c.v.Set(key, value)
 	c.v.Set(strings.Split(key, ".")[0]+".updated", now())
-}
-
-func (c *Config) writeConfig() error {
-	return c.v.WriteConfig()
 }
 
 func (c *Config) Get(key string) interface{} {

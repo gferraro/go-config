@@ -1,6 +1,7 @@
 package config
 
 import (
+	"context"
 	"io/ioutil"
 	"log"
 	"math/rand"
@@ -27,12 +28,12 @@ func newFs(t *testing.T, file string) func() {
 	require.NoError(t, err)
 	filePath := path.Join(testTomlFileDir, configFileName)
 	require.NoError(t, afero.WriteFile(fs, filePath, b, 0644))
-	f := path.Join(os.TempDir(), filePath+".lock")
+	lockFile := path.Join(os.TempDir(), filePath+".lock")
 	lockFilePath = func(p string) string {
-		return f
+		return lockFile
 	}
 	return func() {
-		os.Remove(f)
+		os.Remove(lockFile)
 	}
 }
 
@@ -51,7 +52,7 @@ func TestReadingConfigInDir(t *testing.T) {
 	conf, err := New(testTomlFileDir)
 	require.NoError(t, err)
 
-	device := Device{}
+	var device Device
 	deviceChanges := Device{}
 	deviceChanges.ID = 789
 	assert.NoError(t, conf.Unmarshal(DeviceKey, &device))
@@ -75,7 +76,7 @@ func TestReadingConfigInDir(t *testing.T) {
 	assert.NoError(t, conf.Unmarshal(TestHostsKey, &testHosts))
 	assert.Equal(t, testHostsChanges, testHosts)
 
-	battery := Battery{}
+	var battery Battery
 	batteryChanges := Battery{}
 	batteryChanges.NoBattery = 10
 	assert.NoError(t, conf.Unmarshal(BatteryKey, &battery))
@@ -111,7 +112,7 @@ func TestReadingConfigInDir(t *testing.T) {
 	assert.NoError(t, conf.Unmarshal(PortsKey, &ports))
 	assert.Equal(t, portsChanges, ports)
 
-	secrets := Secrets{}
+	var secrets Secrets
 	secretsChanges := Secrets{}
 	secretsChanges.DevicePassword = "pass"
 	assert.NoError(t, conf.Unmarshal(SecretsKey, &secrets))
@@ -167,7 +168,7 @@ func TestFileLock(t *testing.T) {
 	require.NoError(t, err)
 
 	require.NoError(t, conf.getFileLock())
-	require.Error(t, conf2.getFileLock())
+	require.Equal(t, context.DeadlineExceeded, conf2.getFileLock())
 	conf.fileLock.Unlock()
 	require.NoError(t, conf2.getFileLock())
 }
