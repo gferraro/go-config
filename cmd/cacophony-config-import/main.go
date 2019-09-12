@@ -8,6 +8,7 @@ import (
 	"reflect"
 	"time"
 
+	config "github.com/TheCacophonyProject/go-config"
 	"github.com/alexflint/go-arg"
 	"github.com/mitchellh/mapstructure"
 	"github.com/spf13/viper"
@@ -27,7 +28,7 @@ func (Args) Version() string {
 
 func procArgs() Args {
 	args := Args{
-		Dir: "/etc/cacophony",
+		Dir: config.DefaultConfigDir,
 	}
 	arg.MustParse(&args)
 	return args

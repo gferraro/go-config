@@ -13,9 +13,9 @@ builds:
   - arm
   goarm:
   - "7"
-  main: ./cmd/config
+  main: ./cmd/cacophony-config-import
   ldflags: -s -w -X main.version={{.Version}}
-  binary: cacophony-config
+  binary: cacophony-config-import
 
 nfpms:
 - vendor: The Cacophony Project
