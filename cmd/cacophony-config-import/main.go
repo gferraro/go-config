@@ -216,7 +216,7 @@ type recorderConfig struct {
 }
 
 type motionConfig struct {
-	DynamicThreshold bool   `yaml:"dynamic-thresh" mapstructure:"thermal-motion.min-secs"`
+	DynamicThreshold bool   `yaml:"dynamic-thresh" mapstructure:"thermal-motion.dynamic-threshold"`
 	TempThresh       uint16 `yaml:"temp-thresh" mapstructure:"thermal-motion.temp-thresh"`
 	DeltaThresh      uint16 `yaml:"delta-thresh" mapstructure:"thermal-motion.delta-thresh"`
 	CountThresh      int    `yaml:"count-thresh" mapstructure:"thermal-motion.count-thresh"`

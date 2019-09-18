@@ -16,11 +16,14 @@
 
 package config
 
+import "time"
+
 const LocationKey = "location"
 
 type Location struct {
-	Accuracy  int
-	Altitude  int
+	Timestamp time.Time
+	Accuracy  float32
+	Altitude  float32
 	Latitude  float32
 	Longitude float32
 }
