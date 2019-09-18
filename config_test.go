@@ -209,9 +209,11 @@ func randomWindows() (w Windows) {
 	return
 }
 
-func randomLocation() (l Location) {
-	fako.Fuzz(&l)
-	return
+func randomLocation() Location {
+	return Location{
+		Accuracy:  float32(randSrc.Int63()),
+		Longitude: float32(randSrc.Int63()),
+	}
 }
 
 func randomTestHosts() TestHosts {
