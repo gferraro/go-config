@@ -43,7 +43,6 @@ func TestDefaults(t *testing.T) {
 func TestReadingConfigInDir(t *testing.T) {
 	configBytes := FileToBytes(t, "./test-files/test.toml")
 	defer NewFs(t, configBytes, testTomlFileDir, afero.NewMemMapFs())()
-	//defer newFs(t, testTomlName)()
 	conf, err := New(testTomlFileDir)
 	require.NoError(t, err)
 
