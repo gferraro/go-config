@@ -2,10 +2,8 @@ package config
 
 import (
 	"context"
-	"io/ioutil"
 	"log"
 	"math/rand"
-	"os"
 	"path"
 	"testing"
 	"time"
@@ -22,21 +20,6 @@ const (
 	testTomlFileDir     = "/"
 )
 
-func newFs(t *testing.T, file string) func() {
-	fs = afero.NewMemMapFs()
-	b, err := ioutil.ReadFile(file)
-	require.NoError(t, err)
-	filePath := path.Join(testTomlFileDir, configFileName)
-	require.NoError(t, afero.WriteFile(fs, filePath, b, 0644))
-	lockFile := path.Join(os.TempDir(), filePath+".lock")
-	lockFilePath = func(p string) string {
-		return lockFile
-	}
-	return func() {
-		os.Remove(lockFile)
-	}
-}
-
 func printConfigFile(dir string) {
 	filePath := path.Join(dir, configFileName)
 	b, err := afero.ReadFile(fs, filePath)
@@ -47,8 +30,20 @@ func printConfigFile(dir string) {
 	log.Println(string(b))
 }
 
+func TestDefaults(t *testing.T) {
+	defer NewFs(t, []byte{}, DefaultConfigDir, afero.NewMemMapFs())()
+	conf, err := New(DefaultConfigDir)
+	require.NoError(t, err)
+
+	location := DefaultWindowLocation()
+	assert.NoError(t, conf.Unmarshal(LocationKey, &location))
+	assert.Equal(t, DefaultWindowLocation(), location)
+}
+
 func TestReadingConfigInDir(t *testing.T) {
-	defer newFs(t, testTomlName)()
+	configBytes := FileToBytes(t, "./test-files/test.toml")
+	defer NewFs(t, configBytes, testTomlFileDir, afero.NewMemMapFs())()
+	//defer newFs(t, testTomlName)()
 	conf, err := New(testTomlFileDir)
 	require.NoError(t, err)
 
@@ -132,7 +127,7 @@ func TestReadingConfigInDir(t *testing.T) {
 }
 
 func TestWriting(t *testing.T) {
-	defer newFs(t, testTomlName)()
+	defer NewFs(t, []byte{}, testTomlFileDir, afero.NewMemMapFs())()
 	conf, err := New(testTomlFileDir)
 	require.NoError(t, err)
 	conf2, err := New(testTomlFileDir)
@@ -165,7 +160,7 @@ func TestWriting(t *testing.T) {
 }
 
 func TestFileLock(t *testing.T) {
-	defer newFs(t, testTomlName)()
+	defer NewFs(t, []byte{}, testTomlFileDir, afero.NewMemMapFs())()
 	lockTimeout = time.Millisecond * 100
 
 	conf, err := New(testTomlFileDir)
@@ -180,7 +175,7 @@ func TestFileLock(t *testing.T) {
 }
 
 func TestSettingUpdated(t *testing.T) {
-	defer newFs(t, testTomlName)()
+	defer NewFs(t, []byte{}, testTomlFileDir, afero.NewMemMapFs())()
 	newNow()
 	conf, err := New(testTomlFileDir)
 	require.NoError(t, err)
