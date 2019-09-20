@@ -19,19 +19,15 @@ package config
 import (
 	"context"
 	"errors"
-	"io/ioutil"
-	"os"
 	"path"
 	"reflect"
 	"strings"
-	"testing"
 	"time"
 
 	"github.com/gofrs/flock"
 	"github.com/mitchellh/mapstructure"
 	"github.com/spf13/afero"
 	"github.com/spf13/viper"
-	"github.com/stretchr/testify/require"
 )
 
 type Config struct {
@@ -42,7 +38,7 @@ type Config struct {
 
 const (
 	DefaultConfigDir = "/etc/cacophony"
-	configFileName   = "config.toml"
+	ConfigFileName   = "config.toml"
 	lockRetryDelay   = 678 * time.Millisecond
 )
 
@@ -57,7 +53,7 @@ var lockTimeout = 10 * time.Second
 // New created a new config and loads files from the given directory
 func New(dir string) (*Config, error) {
 	// TODO Take service name and restart service if config changes
-	configFile := path.Join(dir, configFileName)
+	configFile := path.Join(dir, ConfigFileName)
 	c := &Config{
 		v:        viper.New(),
 		fileLock: flock.New(lockFilePath(configFile)),
@@ -146,23 +142,10 @@ func (c *Config) Get(key string) interface{} {
 	return c.v.Get(key)
 }
 
-// NewFs is just for testing purposes.
-func NewFs(t *testing.T, configBytes []byte, configDir string, f afero.Fs) func() {
+func SetFs(f afero.Fs) {
 	fs = f
-	filePath := path.Join(configDir, configFileName)
-	require.NoError(t, afero.WriteFile(fs, filePath, configBytes, 0644))
-	lockFile := path.Join(os.TempDir(), filePath+".lock")
-	require.NoError(t, os.MkdirAll(path.Dir(lockFile), 0777))
-	lockFilePath = func(p string) string {
-		return lockFile
-	}
-	return func() {
-		os.Remove(lockFile)
-	}
 }
 
-func FileToBytes(t *testing.T, filePath string) []byte {
-	b, err := ioutil.ReadFile(filePath)
-	require.NoError(t, err)
-	return b
+func SetLockFilePath(f func(string) string) {
+	lockFilePath = f
 }

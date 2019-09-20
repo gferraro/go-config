@@ -8,6 +8,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/TheCacophonyProject/go-config/testify"
 	"github.com/spf13/afero"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -21,7 +22,7 @@ const (
 )
 
 func printConfigFile(dir string) {
-	filePath := path.Join(dir, configFileName)
+	filePath := path.Join(dir, ConfigFileName)
 	b, err := afero.ReadFile(fs, filePath)
 	if err != nil {
 		log.Println(err)
@@ -31,7 +32,7 @@ func printConfigFile(dir string) {
 }
 
 func TestDefaults(t *testing.T) {
-	defer NewFs(t, []byte{}, DefaultConfigDir, afero.NewMemMapFs())()
+	defer newFs(t, "")()
 	conf, err := New(DefaultConfigDir)
 	require.NoError(t, err)
 
@@ -41,9 +42,8 @@ func TestDefaults(t *testing.T) {
 }
 
 func TestReadingConfigInDir(t *testing.T) {
-	configBytes := FileToBytes(t, "./test-files/test.toml")
-	defer NewFs(t, configBytes, testTomlFileDir, afero.NewMemMapFs())()
-	conf, err := New(testTomlFileDir)
+	defer newFs(t, "./test-files/test.toml")()
+	conf, err := New(DefaultConfigDir)
 	require.NoError(t, err)
 
 	var device Device
@@ -126,10 +126,10 @@ func TestReadingConfigInDir(t *testing.T) {
 }
 
 func TestWriting(t *testing.T) {
-	defer NewFs(t, []byte{}, testTomlFileDir, afero.NewMemMapFs())()
-	conf, err := New(testTomlFileDir)
+	defer newFs(t, "")()
+	conf, err := New(DefaultConfigDir)
 	require.NoError(t, err)
-	conf2, err := New(testTomlFileDir)
+	conf2, err := New(DefaultConfigDir)
 	require.NoError(t, err)
 
 	d := randomDevice()
@@ -141,7 +141,7 @@ func TestWriting(t *testing.T) {
 	require.NoError(t, conf.Set(LocationKey, &l))
 	require.NoError(t, conf2.Set(TestHostsKey, &h))
 
-	conf, err = New(testTomlFileDir)
+	conf, err = New(DefaultConfigDir)
 	require.NoError(t, err)
 	d2 := Device{}
 	require.NoError(t, conf.Unmarshal(DeviceKey, &d2))
@@ -159,12 +159,12 @@ func TestWriting(t *testing.T) {
 }
 
 func TestFileLock(t *testing.T) {
-	defer NewFs(t, []byte{}, testTomlFileDir, afero.NewMemMapFs())()
+	defer newFs(t, "")()
 	lockTimeout = time.Millisecond * 100
 
-	conf, err := New(testTomlFileDir)
+	conf, err := New(DefaultConfigDir)
 	require.NoError(t, err)
-	conf2, err := New(testTomlFileDir)
+	conf2, err := New(DefaultConfigDir)
 	require.NoError(t, err)
 
 	require.NoError(t, conf.getFileLock())
@@ -174,9 +174,9 @@ func TestFileLock(t *testing.T) {
 }
 
 func TestSettingUpdated(t *testing.T) {
-	defer NewFs(t, []byte{}, testTomlFileDir, afero.NewMemMapFs())()
+	defer newFs(t, "")()
 	newNow()
-	conf, err := New(testTomlFileDir)
+	conf, err := New(DefaultConfigDir)
 	require.NoError(t, err)
 
 	require.NoError(t, conf.Set(DeviceKey, randomDevice()))
@@ -184,6 +184,15 @@ func TestSettingUpdated(t *testing.T) {
 
 	require.NoError(t, conf.Set(DeviceKey+".name", randString(10)))
 	require.Equal(t, conf.Get(DeviceKey+".updated"), now())
+}
+
+func newFs(t *testing.T, configFile string) func() {
+	fs := afero.NewMemMapFs()
+	SetFs(fs)
+	fsConfigFile := path.Join(DefaultConfigDir, ConfigFileName)
+	lockFileFunc, cleanupFunc := testify.WriteConfigFromFile(t, configFile, fsConfigFile, fs)
+	SetLockFilePath(lockFileFunc)
+	return cleanupFunc
 }
 
 func newNow() {
