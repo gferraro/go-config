@@ -38,7 +38,7 @@ type Config struct {
 
 const (
 	DefaultConfigDir = "/etc/cacophony"
-	configFileName   = "config.toml"
+	ConfigFileName   = "config.toml"
 	lockRetryDelay   = 678 * time.Millisecond
 )
 
@@ -53,7 +53,7 @@ var lockTimeout = 10 * time.Second
 // New created a new config and loads files from the given directory
 func New(dir string) (*Config, error) {
 	// TODO Take service name and restart service if config changes
-	configFile := path.Join(dir, configFileName)
+	configFile := path.Join(dir, ConfigFileName)
 	c := &Config{
 		v:        viper.New(),
 		fileLock: flock.New(lockFilePath(configFile)),
@@ -140,4 +140,12 @@ func (c *Config) set(key string, value interface{}) {
 
 func (c *Config) Get(key string) interface{} {
 	return c.v.Get(key)
+}
+
+func SetFs(f afero.Fs) {
+	fs = f
+}
+
+func SetLockFilePath(f func(string) string) {
+	lockFilePath = f
 }
