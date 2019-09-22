@@ -8,7 +8,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/TheCacophonyProject/go-config/testify"
+	"github.com/TheCacophonyProject/go-config/configtest"
 	"github.com/spf13/afero"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -190,7 +190,7 @@ func newFs(t *testing.T, configFile string) func() {
 	fs := afero.NewMemMapFs()
 	SetFs(fs)
 	fsConfigFile := path.Join(DefaultConfigDir, ConfigFileName)
-	lockFileFunc, cleanupFunc := testify.WriteConfigFromFile(t, configFile, fsConfigFile, fs)
+	lockFileFunc, cleanupFunc := configtest.WriteConfigFromFile(t, configFile, fsConfigFile, fs)
 	SetLockFilePath(lockFileFunc)
 	return cleanupFunc
 }
