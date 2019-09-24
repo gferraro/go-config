@@ -1,3 +1,6 @@
+[audio]
+ card = 1
+
 [device]
   id = 789
 
