@@ -115,6 +115,7 @@ var configProcessingFuncs = []func(string) (interface{}, error){
 	processLocation,
 	processDevice,
 	processManagementd,
+	processAudio,
 }
 
 func processAttiny(configDir string) (interface{}, error) {
@@ -270,4 +271,15 @@ func processManagementd(configDir string) (interface{}, error) {
 
 type rawManagementdConfig struct {
 	Port int `yaml:"port" mapstructure:"ports.managementd"`
+}
+
+func processAudio(configDir string) (interface{}, error) {
+	s := &rawAudioConfig{}
+	return s, yamlToStruct(path.Join(configDir, "../audiobait.yaml"), s)
+}
+
+type rawAudioConfig struct {
+	AudioDir      string `yaml:"audio-directory" mapstructure:"audio.directory"`
+	Card          int    `yaml:"card" mapstructure:"audio.card"`
+	VolumeControl string `yaml:"volume-control" mapstructure:"audio.volume-control"`
 }

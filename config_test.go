@@ -123,6 +123,12 @@ func TestReadingConfigInDir(t *testing.T) {
 	thermalMotionChanges.TempThresh = 398
 	assert.NoError(t, conf.Unmarshal(ThermalMotionKey, &thermalMotion))
 	assert.Equal(t, thermalMotionChanges, thermalMotion)
+
+	audio := DefaultAudio()
+	audioChanges := DefaultAudio()
+	audioChanges.Card = 1
+	assert.NoError(t, conf.Unmarshal(AudioKey, &audio))
+	assert.Equal(t, audioChanges, audio)
 }
 
 func TestWriting(t *testing.T) {
