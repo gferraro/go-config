@@ -146,7 +146,6 @@ func TestWriting(t *testing.T) {
 	require.NoError(t, conf2.Set(WindowsKey, w))
 	require.NoError(t, conf.Set(LocationKey, &l))
 	require.NoError(t, conf2.Set(TestHostsKey, &h))
-
 	conf, err = New(DefaultConfigDir)
 	require.NoError(t, err)
 	d2 := Device{}
@@ -160,7 +159,7 @@ func TestWriting(t *testing.T) {
 
 	require.Equal(t, d, d2)
 	require.Equal(t, w, w2)
-	require.Equal(t, l, l2)
+	equalLocation(t, l, l2)
 	require.Equal(t, h, h2)
 }
 
@@ -222,7 +221,16 @@ func randomLocation() Location {
 	return Location{
 		Accuracy:  float32(randSrc.Int63()),
 		Longitude: float32(randSrc.Int63()),
+		Timestamp: now(),
 	}
+}
+
+func equalLocation(t *testing.T, l1, l2 Location) {
+	require.Equal(t, l1.Accuracy, l2.Accuracy)
+	require.Equal(t, l1.Altitude, l2.Altitude)
+	require.Equal(t, l1.Latitude, l2.Latitude)
+	require.Equal(t, l1.Longitude, l2.Longitude)
+	require.Equal(t, l1.Timestamp.Unix(), l2.Timestamp.Unix())
 }
 
 func randomTestHosts() TestHosts {

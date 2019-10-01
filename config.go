@@ -120,7 +120,15 @@ func (c *Config) getFileLock() error {
 }
 
 func interfaceToMap(value interface{}) (m map[string]interface{}, err error) {
-	err = mapstructure.Decode(value, &m)
+	decoderConfig := mapstructure.DecoderConfig{
+		DecodeHook: locationToMap,
+		Result:     &m,
+	}
+	decoder, err := mapstructure.NewDecoder(&decoderConfig)
+	if err != nil {
+		return nil, err
+	}
+	err = decoder.Decode(value)
 	return
 }
 
