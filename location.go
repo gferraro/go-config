@@ -42,17 +42,15 @@ func DefaultWindowLocation() Location {
 }
 
 func locationToMap(f reflect.Type, t reflect.Type, data interface{}) (interface{}, error) {
-	if t != reflect.TypeOf(map[string]interface{}{}) {
+	if t != mapStrInterfaceType {
 		return data, nil
 	}
 	switch f {
 	case reflect.TypeOf(&Location{}):
-		var m map[string]interface{}
-		err := mapstructure.Decode(data, &m)
-		m["Timestamp"] = data.(*Location).Timestamp.Truncate(time.Second)
-		return m, err
+		data = *(data.(*Location)) // follow the pointer
+		fallthrough
 	case reflect.TypeOf(Location{}):
-		var m map[string]interface{}
+		m := map[string]interface{}{}
 		err := mapstructure.Decode(data, &m)
 		m["Timestamp"] = data.(Location).Timestamp.Truncate(time.Second)
 		return m, err

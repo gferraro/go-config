@@ -49,6 +49,7 @@ var lockFilePath = func(configFile string) string {
 	return configFile + ".lock"
 }
 var lockTimeout = 10 * time.Second
+var mapStrInterfaceType = reflect.TypeOf(map[string]interface{}{})
 
 // New created a new config and loads files from the given directory
 func New(dir string) (*Config, error) {
