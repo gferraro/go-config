@@ -164,6 +164,27 @@ func TestWriting(t *testing.T) {
 	require.Equal(t, h, h2)
 }
 
+func TestClear(t *testing.T) {
+	defer newFs(t, "")()
+	conf, err := New(DefaultConfigDir)
+	require.NoError(t, err)
+
+	l := randomLocation()
+	w := randomWindows()
+	require.NoError(t, conf.Set(LocationKey, &l))
+	require.NoError(t, conf.Set(WindowsKey, &w))
+	require.NoError(t, conf.Unset(LocationKey))
+	conf, err = New(DefaultConfigDir)
+	require.NoError(t, err)
+	l2 := Location{}
+	require.NoError(t, conf.Unmarshal(LocationKey, &l2))
+
+	w2 := Windows{}
+	require.NoError(t, conf.Unmarshal(WindowsKey, &w2))
+	equalLocation(t, Location{}, l2)
+	require.Equal(t, w, w2)
+}
+
 func TestFileLock(t *testing.T) {
 	defer newFs(t, "")()
 	lockTimeout = time.Millisecond * 100
@@ -223,6 +244,14 @@ func randomLocation() Location {
 		Accuracy:  float32(randSrc.Int63()),
 		Longitude: float32(randSrc.Int63()),
 	}
+}
+
+func equalLocation(t *testing.T, l1, l2 Location) {
+	require.Equal(t, l1.Accuracy, l2.Accuracy)
+	require.Equal(t, l1.Altitude, l2.Altitude)
+	require.Equal(t, l1.Latitude, l2.Latitude)
+	require.Equal(t, l1.Longitude, l2.Longitude)
+	require.Equal(t, l1.Timestamp.Unix(), l2.Timestamp.Unix())
 }
 
 func randomTestHosts() TestHosts {
