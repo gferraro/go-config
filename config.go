@@ -116,11 +116,16 @@ func (c *Config) Unset(key string) error {
 		return err
 	}
 	configFile := c.v.ConfigFileUsed()
-	// Need a new viper instance to claer old settings
+	// Need a new viper instance to clear old settings
 	c.v = viper.New()
 	c.v.SetFs(fs)
 	c.v.SetConfigFile(configFile)
-	if err := c.v.ReadConfig(bytes.NewReader([]byte(tomlTree.String()))); err != nil {
+	var buf bytes.Buffer
+	_, err = tomlTree.WriteTo(&buf)
+	if err != nil {
+		return err
+	}
+	if err := c.v.ReadConfig(bytes.NewReader(buf.Bytes())); err != nil {
 		return err
 	}
 	c.v.Set(key+".updated", now())
