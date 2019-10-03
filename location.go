@@ -16,7 +16,12 @@
 
 package config
 
-import "time"
+import (
+	"reflect"
+	"time"
+
+	"github.com/mitchellh/mapstructure"
+)
 
 const LocationKey = "location"
 
@@ -33,5 +38,23 @@ func DefaultWindowLocation() Location {
 	return Location{
 		Latitude:  -43.5321,
 		Longitude: 172.6362,
+	}
+}
+
+func locationToMap(f reflect.Type, t reflect.Type, data interface{}) (interface{}, error) {
+	if t != mapStrInterfaceType {
+		return data, nil
+	}
+	switch f {
+	case reflect.TypeOf(&Location{}):
+		data = *(data.(*Location)) // follow the pointer
+		fallthrough
+	case reflect.TypeOf(Location{}):
+		m := map[string]interface{}{}
+		err := mapstructure.Decode(data, &m)
+		m["Timestamp"] = data.(Location).Timestamp.Truncate(time.Second)
+		return m, err
+	default:
+		return data, nil
 	}
 }
