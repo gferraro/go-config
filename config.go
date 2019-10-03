@@ -52,6 +52,7 @@ var lockFilePath = func(configFile string) string {
 	return configFile + ".lock"
 }
 var lockTimeout = 10 * time.Second
+var mapStrInterfaceType = reflect.TypeOf(map[string]interface{}{})
 
 // New created a new config and loads files from the given directory
 func New(dir string) (*Config, error) {
@@ -147,7 +148,15 @@ func (c *Config) getFileLock() error {
 }
 
 func interfaceToMap(value interface{}) (m map[string]interface{}, err error) {
-	err = mapstructure.Decode(value, &m)
+	decoderConfig := mapstructure.DecoderConfig{
+		DecodeHook: locationToMap,
+		Result:     &m,
+	}
+	decoder, err := mapstructure.NewDecoder(&decoderConfig)
+	if err != nil {
+		return nil, err
+	}
+	err = decoder.Decode(value)
 	return
 }
 
