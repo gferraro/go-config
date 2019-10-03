@@ -17,6 +17,7 @@
 package config
 
 import (
+	"bytes"
 	"context"
 	"errors"
 	"path"
@@ -28,6 +29,8 @@ import (
 	"github.com/mitchellh/mapstructure"
 	"github.com/spf13/afero"
 	"github.com/spf13/viper"
+
+	toml "github.com/pelletier/go-toml"
 )
 
 type Config struct {
@@ -105,6 +108,30 @@ func (c *Config) StrictSet(key string, value interface{}, time time.Time) error 
 	return nil
 }
 */
+
+func (c *Config) Unset(key string) error {
+	configMap := c.v.AllSettings()
+	delete(configMap, key)
+	tomlTree, err := toml.TreeFromMap(configMap)
+	if err != nil {
+		return err
+	}
+	configFile := c.v.ConfigFileUsed()
+	// Need a new viper instance to clear old settings
+	c.v = viper.New()
+	c.v.SetFs(fs)
+	c.v.SetConfigFile(configFile)
+	var buf bytes.Buffer
+	_, err = tomlTree.WriteTo(&buf)
+	if err != nil {
+		return err
+	}
+	if err := c.v.ReadConfig(bytes.NewReader(buf.Bytes())); err != nil {
+		return err
+	}
+	c.v.Set(key+".updated", now())
+	return c.v.WriteConfig()
+}
 
 var errNoFileLock = errors.New("failed to get lock on file")
 

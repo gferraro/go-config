@@ -163,6 +163,27 @@ func TestWriting(t *testing.T) {
 	require.Equal(t, h, h2)
 }
 
+func TestClear(t *testing.T) {
+	defer newFs(t, "")()
+	conf, err := New(DefaultConfigDir)
+	require.NoError(t, err)
+
+	l := randomLocation()
+	w := randomWindows()
+	require.NoError(t, conf.Set(LocationKey, &l))
+	require.NoError(t, conf.Set(WindowsKey, &w))
+	require.NoError(t, conf.Unset(LocationKey))
+	conf, err = New(DefaultConfigDir)
+	require.NoError(t, err)
+	l2 := Location{}
+	require.NoError(t, conf.Unmarshal(LocationKey, &l2))
+
+	w2 := Windows{}
+	require.NoError(t, conf.Unmarshal(WindowsKey, &w2))
+	equalLocation(t, Location{}, l2)
+	require.Equal(t, w, w2)
+}
+
 func TestFileLock(t *testing.T) {
 	defer newFs(t, "")()
 	lockTimeout = time.Millisecond * 100
