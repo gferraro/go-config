@@ -20,6 +20,8 @@ import (
 	"bytes"
 	"context"
 	"errors"
+	"fmt"
+	"log"
 	"path"
 	"reflect"
 	"strings"
@@ -44,6 +46,15 @@ const (
 	ConfigFileName   = "config.toml"
 	lockRetryDelay   = 678 * time.Millisecond
 )
+
+type section struct {
+	key         string
+	structToMap func(reflect.Type, reflect.Type, interface{}) (interface{}, error)
+	validate    func(interface{}) bool
+	mapToStruct func(map[string]interface{}) (interface{}, error)
+}
+
+var allSections = map[string]section{} // each different section file has an init function that will add to this.
 
 // Helpers for testing purposes
 var fs = afero.NewOsFs()
@@ -78,6 +89,7 @@ func (c *Config) Unmarshal(key string, raw interface{}) error {
 	return c.v.UnmarshalKey(key, raw)
 }
 
+// Set can only update one section at a time.
 func (c *Config) Set(key string, value interface{}) error {
 	if err := c.getFileLock(); err != nil {
 		return err
@@ -92,6 +104,29 @@ func (c *Config) Set(key string, value interface{}) error {
 	}
 	c.set(key, value)
 	return c.v.WriteConfig()
+}
+
+// SetFromMap can only update one section at a time.
+func (c *Config) SetFromMap(sectionKey string, newConfig map[string]interface{}) error {
+	if err := c.getFileLock(); err != nil {
+		return err
+	}
+	defer c.fileLock.Unlock()
+	if err := c.Update(); err != nil {
+		return err
+	}
+
+	log.Printf("section: %s, value: %s", sectionKey, newConfig)
+	section, ok := allSections[sectionKey]
+	if !ok {
+		return fmt.Errorf("no section found called '%s'", sectionKey)
+	}
+	newStruct, err := section.mapToStruct(newConfig)
+	if err != nil {
+		return err
+	}
+
+	return c.Set(sectionKey, newStruct)
 }
 
 func (c *Config) Update() error {

@@ -212,6 +212,16 @@ func TestSettingUpdated(t *testing.T) {
 	require.Equal(t, conf.Get(DeviceKey+".updated"), now())
 }
 
+func TestMapToLocation(t *testing.T) {
+	m := map[string]interface{}{
+		"latitude":  "123.321",
+		"timestamp": now().Truncate(1).String(),
+	}
+	l, err := mapToLocation(m)
+	require.NoError(t, err)
+	log.Printf("%+v", l)
+}
+
 func newFs(t *testing.T, configFile string) func() {
 	fs := afero.NewMemMapFs()
 	SetFs(fs)
