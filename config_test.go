@@ -213,6 +213,7 @@ func TestSettingUpdated(t *testing.T) {
 }
 
 func TestMapToLocation(t *testing.T) {
+	defer newFs(t, "")()
 	m := map[string]interface{}{
 		"latitude":  "123.321",
 		"timestamp": now().Truncate(1).String(),
@@ -220,6 +221,15 @@ func TestMapToLocation(t *testing.T) {
 	l, err := mapToLocation(m)
 	require.NoError(t, err)
 	log.Printf("%+v", l)
+
+	conf, err := New(DefaultConfigDir)
+	require.NoError(t, err)
+
+	require.NoError(t, conf.SetFromMap(LocationKey, m))
+
+	var l2 Location
+	require.NoError(t, conf.Unmarshal(LocationKey, &l2))
+	equalLocation(t, l.(Location), l2)
 }
 
 func newFs(t *testing.T, configFile string) func() {
