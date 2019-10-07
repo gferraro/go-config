@@ -20,6 +20,14 @@ import "time"
 
 const ThermalThrottlerKey = "thermal-throttler"
 
+func init() {
+	allSections[ThermalThrottlerKey] = section{
+		key:         ThermalThrottlerKey,
+		mapToStruct: makeMapToStruct(ThermalThrottler{}),
+		validate:    noValidateFunc,
+	}
+}
+
 type ThermalThrottler struct {
 	Activate   bool
 	BucketSize time.Duration `mapstructure:"bucket-size"`

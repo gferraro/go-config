@@ -16,6 +16,14 @@
 
 package config
 
+func init() {
+	allSections[WindowsKey] = section{
+		key:         WindowsKey,
+		mapToStruct: makeMapToStruct(Windows{}),
+		validate:    noValidateFunc,
+	}
+}
+
 const WindowsKey = "windows"
 
 type Windows struct {
@@ -31,5 +39,27 @@ func DefaultWindows() Windows {
 		StopRecording:  "+30m",
 		PowerOn:        "12:00",
 		PowerOff:       "12:00",
+	}
+}
+
+func noValidateFunc(s interface{}) error {
+	return nil
+}
+
+func makeMapToStruct(s interface{}) func(map[string]interface{}) (interface{}, error) {
+	return func(m map[string]interface{}) (interface{}, error) {
+		if err := decodeStructFromMap(&s, m, stringToTime); err != nil {
+			return nil, err
+		}
+		return s, nil
+	}
+}
+
+func makeStructToMap(s interface{}) func(map[string]interface{}) (interface{}, error) {
+	return func(m map[string]interface{}) (interface{}, error) {
+		if err := decodeStructFromMap(&s, m, stringToTime); err != nil {
+			return nil, err
+		}
+		return s, nil
 	}
 }

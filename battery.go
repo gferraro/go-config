@@ -18,6 +18,14 @@ package config
 
 const BatteryKey = "battery"
 
+func init() {
+	allSections[BatteryKey] = section{
+		key:         BatteryKey,
+		mapToStruct: makeMapToStruct(Battery{}),
+		validate:    noValidateFunc,
+	}
+}
+
 type Battery struct {
 	EnableVoltageReadings bool   `mapstructure:"enable-voltage-readings"`
 	NoBattery             uint16 `mapstructure:"no-battery-reading"`

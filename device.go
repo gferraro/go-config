@@ -18,6 +18,14 @@ package config
 
 const DeviceKey = "device"
 
+func init() {
+	allSections[DeviceKey] = section{
+		key:         DeviceKey,
+		mapToStruct: makeMapToStruct(Device{}),
+		validate:    noValidateFunc,
+	}
+}
+
 type Device struct {
 	Group  string
 	ID     int

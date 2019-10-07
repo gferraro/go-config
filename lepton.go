@@ -18,6 +18,14 @@ package config
 
 const LeptonKey = "lepton"
 
+func init() {
+	allSections[LeptonKey] = section{
+		key:         LeptonKey,
+		mapToStruct: makeMapToStruct(Lepton{}),
+		validate:    noValidateFunc,
+	}
+}
+
 type Lepton struct {
 	SPISpeed    int64  `mapstructure:"spi-speed"`
 	FrameOutput string `mapstructure:"frame-output"`

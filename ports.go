@@ -18,6 +18,14 @@ package config
 
 const PortsKey = "ports"
 
+func init() {
+	allSections[PortsKey] = section{
+		key:         PortsKey,
+		mapToStruct: makeMapToStruct(Ports{}),
+		validate:    noValidateFunc,
+	}
+}
+
 type Ports struct {
 	Managementd int
 }

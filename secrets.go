@@ -18,6 +18,14 @@ package config
 
 const SecretsKey = "secrets"
 
+func init() {
+	allSections[SecretsKey] = section{
+		key:         SecretsKey,
+		mapToStruct: makeMapToStruct(Secrets{}),
+		validate:    noValidateFunc,
+	}
+}
+
 type Secrets struct {
 	DevicePassword string `mapstructure:"device-password"`
 }

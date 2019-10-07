@@ -18,6 +18,14 @@ package config
 
 const ThermalMotionKey = "thermal-motion"
 
+func init() {
+	allSections[ThermalMotionKey] = section{
+		key:         ThermalMotionKey,
+		mapToStruct: makeMapToStruct(ThermalMotion{}),
+		validate:    noValidateFunc,
+	}
+}
+
 type ThermalMotion struct {
 	DynamicThreshold bool   `mapstructure:"min-secs"`
 	TempThresh       uint16 `mapstructure:"temp-thresh"`

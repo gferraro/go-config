@@ -18,6 +18,14 @@ package config
 
 const AudioKey = "audio"
 
+func init() {
+	allSections[AudioKey] = section{
+		key:         AudioKey,
+		mapToStruct: makeMapToStruct(Audio{}),
+		validate:    noValidateFunc,
+	}
+}
+
 type Audio struct {
 	Dir           string `mapstructure:"directory"`
 	Card          int    `mapstructure:"card"`

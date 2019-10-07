@@ -207,20 +207,16 @@ func TestSettingUpdated(t *testing.T) {
 
 	require.NoError(t, conf.Set(DeviceKey, randomDevice()))
 	require.Equal(t, conf.Get(DeviceKey+".updated"), now())
-
-	require.NoError(t, conf.Set(DeviceKey+".name", randString(10)))
-	require.Equal(t, conf.Get(DeviceKey+".updated"), now())
 }
 
 func TestMapToLocation(t *testing.T) {
 	defer newFs(t, "")()
 	m := map[string]interface{}{
 		"latitude":  "123.321",
-		"timestamp": now().Truncate(1).String(),
+		"timestamp": now().Format(TimeFormat),
 	}
 	l, err := mapToLocation(m)
 	require.NoError(t, err)
-	log.Printf("%+v", l)
 
 	conf, err := New(DefaultConfigDir)
 	require.NoError(t, err)

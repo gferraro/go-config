@@ -20,6 +20,14 @@ import "time"
 
 const TestHostsKey = "test-hosts"
 
+func init() {
+	allSections[TestHostsKey] = section{
+		key:         TestHostsKey,
+		mapToStruct: makeMapToStruct(TestHosts{}),
+		validate:    noValidateFunc,
+	}
+}
+
 type TestHosts struct {
 	URLs         []string
 	PingWaitTime time.Duration `mapstructure:"ping-wait-time"`

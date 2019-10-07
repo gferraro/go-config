@@ -20,6 +20,14 @@ import "time"
 
 const ModemdKey = "modemd"
 
+func init() {
+	allSections[ModemdKey] = section{
+		key:         ModemdKey,
+		mapToStruct: makeMapToStruct(Modemd{}),
+		validate:    noValidateFunc,
+	}
+}
+
 type Modemd struct {
 	TestInterval      time.Duration `mapstructure:"test-interval"`
 	InitialOnDuration time.Duration `mapstructure:"initial-on-duration"`

@@ -18,6 +18,14 @@ package config
 
 const ThermalRecorderKey = "thermal-recorder"
 
+func init() {
+	allSections[ThermalRecorderKey] = section{
+		key:         ThermalRecorderKey,
+		mapToStruct: makeMapToStruct(ThermalRecorder{}),
+		validate:    noValidateFunc,
+	}
+}
+
 type ThermalRecorder struct {
 	OutputDir      string `mapstructure:"output-dir"`
 	MinDiskSpaceMB uint64 `mapstructure:"min-disk-space-mb"`

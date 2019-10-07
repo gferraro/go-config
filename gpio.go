@@ -18,6 +18,14 @@ package config
 
 const GPIOKey = "gpio"
 
+func init() {
+	allSections[GPIOKey] = section{
+		key:         GPIOKey,
+		mapToStruct: makeMapToStruct(GPIO{}),
+		validate:    noValidateFunc,
+	}
+}
+
 type GPIO struct {
 	ThermalCameraPower string `mapstructure:"thermal-camera-power"`
 	ModemPower         string `mapstructure:"modem-power"`

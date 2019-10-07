@@ -26,10 +26,10 @@ import (
 func init() {
 	allSections[LocationKey] = section{
 		key:         LocationKey,
-		structToMap: locationToMap,
 		mapToStruct: mapToLocation,
 		validate:    validateLocation,
 	}
+	allSectionDecodeHookFuncs = append(allSectionDecodeHookFuncs, locationToMap)
 }
 
 const LocationKey = "location"
@@ -68,36 +68,18 @@ func locationToMap(f reflect.Type, t reflect.Type, data interface{}) (interface{
 	}
 }
 
-func stringToTime(f reflect.Type, t reflect.Type, data interface{}) (interface{}, error) {
-	if t != reflect.TypeOf(time.Time{}) {
-		return data, nil
-	}
-	switch f {
-	case reflect.TypeOf(""):
-		layout := "2006-01-02 15:04:05.000000000 -0700 MST"
-		return time.Parse(layout, data.(string))
-	}
-	return data, nil
-}
-
 func mapToLocation(m map[string]interface{}) (interface{}, error) {
 	var l Location
-	decoderConfig := mapstructure.DecoderConfig{
-		DecodeHook:       stringToTime,
-		Result:           &l,
-		WeaklyTypedInput: true,
-	}
-	decoder, err := mapstructure.NewDecoder(&decoderConfig)
-	if err != nil {
+	if err := decodeStructFromMap(&l, m, stringToTime); err != nil {
 		return nil, err
 	}
-
-	if err := decoder.Decode(m); err != nil {
+	if err := validateLocation(&l); err != nil {
 		return nil, err
 	}
 	return l, nil
 }
 
-func validateLocation(l interface{}) bool {
-	return true
+//TODO
+func validateLocation(l interface{}) error {
+	return nil
 }
