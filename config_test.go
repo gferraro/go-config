@@ -209,23 +209,65 @@ func TestSettingUpdated(t *testing.T) {
 	require.Equal(t, conf.Get(DeviceKey+".updated"), now())
 }
 
-func TestMapToLocation(t *testing.T) {
+func TestMapToStruct(t *testing.T) {
 	defer newFs(t, "")()
-	m := map[string]interface{}{
-		"latitude":  "123.321",
-		"timestamp": now().Format(TimeFormat),
-	}
-	l, err := mapToLocation(m)
-	require.NoError(t, err)
 
 	conf, err := New(DefaultConfigDir)
 	require.NoError(t, err)
 
-	require.NoError(t, conf.SetFromMap(LocationKey, m))
+	newNow()
+	locationMap := map[string]interface{}{
+		"latitude":  "123.321",
+		"timestamp": now().Format(TimeFormat),
+	}
+	locationExpected := Location{
+		Latitude:  123.321,
+		Timestamp: now(),
+	}
+	var location Location
+	require.NoError(t, conf.SetFromMap(LocationKey, locationMap))
+	require.NoError(t, conf.Unmarshal(LocationKey, &location))
+	equalLocation(t, locationExpected, location)
 
-	var l2 Location
-	require.NoError(t, conf.Unmarshal(LocationKey, &l2))
-	equalLocation(t, l.(Location), l2)
+	audioMap := map[string]interface{}{
+		"directory":      "/audio/directory",
+		"card":           "4",
+		"volume-control": "audio volume control",
+	}
+	audioExpected := Audio{
+		Dir:           "/audio/directory",
+		Card:          4,
+		VolumeControl: "audio volume control",
+	}
+	checkWritingMap(t, AudioKey, &Audio{}, &audioExpected, audioMap, conf)
+
+	batteryMap := map[string]interface{}{"enable-voltage-readings": "true"}
+	batteryExpected := Battery{EnableVoltageReadings: true}
+	checkWritingMap(t, BatteryKey, &Battery{}, &batteryExpected, batteryMap, conf)
+
+	deviceMap := map[string]interface{}{"Group": "a-group"}
+	deviceExpected := Device{Group: "a-group"}
+	checkWritingMap(t, DeviceKey, &Device{}, &deviceExpected, deviceMap, conf)
+
+	modemdMap := map[string]interface{}{
+		"test-interval": "10m4s",
+		"modems": []map[string]interface{}{
+			map[string]interface{}{
+				"name": "modem name",
+			},
+		},
+	}
+	modemdExpected := Modemd{
+		TestInterval: 10*time.Minute + 4*time.Second,
+		Modems:       []Modem{Modem{Name: "modem name"}},
+	}
+	checkWritingMap(t, ModemdKey, &Modemd{}, &modemdExpected, modemdMap, conf)
+}
+
+func checkWritingMap(t *testing.T, key string, s, expected interface{}, m map[string]interface{}, conf *Config) {
+	require.NoError(t, conf.SetFromMap(key, m))
+	require.NoError(t, conf.Unmarshal(key, s))
+	require.Equal(t, expected, s)
 }
 
 func newFs(t *testing.T, configFile string) func() {

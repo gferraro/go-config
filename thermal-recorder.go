@@ -21,7 +21,7 @@ const ThermalRecorderKey = "thermal-recorder"
 func init() {
 	allSections[ThermalRecorderKey] = section{
 		key:         ThermalRecorderKey,
-		mapToStruct: makeMapToStruct(ThermalRecorder{}),
+		mapToStruct: thermalRecorderMapToStruct,
 		validate:    noValidateFunc,
 	}
 }
@@ -42,4 +42,12 @@ func DefaultThermalRecorder() ThermalRecorder {
 		MinDiskSpaceMB: 200,
 		OutputDir:      "/var/spool/cptv",
 	}
+}
+
+func thermalRecorderMapToStruct(m map[string]interface{}) (interface{}, error) {
+	var s ThermalRecorder
+	if err := decodeStructFromMap(&s, m, nil); err != nil {
+		return nil, err
+	}
+	return s, nil
 }

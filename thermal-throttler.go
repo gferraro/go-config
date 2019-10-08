@@ -23,7 +23,7 @@ const ThermalThrottlerKey = "thermal-throttler"
 func init() {
 	allSections[ThermalThrottlerKey] = section{
 		key:         ThermalThrottlerKey,
-		mapToStruct: makeMapToStruct(ThermalThrottler{}),
+		mapToStruct: thermalThrottlerMapToStruct,
 		validate:    noValidateFunc,
 	}
 }
@@ -41,4 +41,12 @@ func DefaultThermalThrottler() ThermalThrottler {
 		BucketSize: 10 * time.Minute,
 		MinRefill:  10 * time.Minute,
 	}
+}
+
+func thermalThrottlerMapToStruct(m map[string]interface{}) (interface{}, error) {
+	var s ThermalThrottler
+	if err := decodeStructFromMap(&s, m, nil); err != nil {
+		return nil, err
+	}
+	return s, nil
 }

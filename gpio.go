@@ -21,7 +21,7 @@ const GPIOKey = "gpio"
 func init() {
 	allSections[GPIOKey] = section{
 		key:         GPIOKey,
-		mapToStruct: makeMapToStruct(GPIO{}),
+		mapToStruct: gpioMapToStruct,
 		validate:    noValidateFunc,
 	}
 }
@@ -36,4 +36,12 @@ func DefaultGPIO() GPIO {
 		ThermalCameraPower: "GPIO23",
 		ModemPower:         "GPIO22",
 	}
+}
+
+func gpioMapToStruct(m map[string]interface{}) (interface{}, error) {
+	var s GPIO
+	if err := decodeStructFromMap(&s, m, nil); err != nil {
+		return nil, err
+	}
+	return s, nil
 }

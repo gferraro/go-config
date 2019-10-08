@@ -19,7 +19,7 @@ package config
 func init() {
 	allSections[WindowsKey] = section{
 		key:         WindowsKey,
-		mapToStruct: makeMapToStruct(Windows{}),
+		mapToStruct: windowsMapToStruct,
 		validate:    noValidateFunc,
 	}
 }
@@ -46,20 +46,10 @@ func noValidateFunc(s interface{}) error {
 	return nil
 }
 
-func makeMapToStruct(s interface{}) func(map[string]interface{}) (interface{}, error) {
-	return func(m map[string]interface{}) (interface{}, error) {
-		if err := decodeStructFromMap(&s, m, stringToTime); err != nil {
-			return nil, err
-		}
-		return s, nil
+func windowsMapToStruct(m map[string]interface{}) (interface{}, error) {
+	var s Windows
+	if err := decodeStructFromMap(&s, m, nil); err != nil {
+		return nil, err
 	}
-}
-
-func makeStructToMap(s interface{}) func(map[string]interface{}) (interface{}, error) {
-	return func(m map[string]interface{}) (interface{}, error) {
-		if err := decodeStructFromMap(&s, m, stringToTime); err != nil {
-			return nil, err
-		}
-		return s, nil
-	}
+	return s, nil
 }

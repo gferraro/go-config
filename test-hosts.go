@@ -23,7 +23,7 @@ const TestHostsKey = "test-hosts"
 func init() {
 	allSections[TestHostsKey] = section{
 		key:         TestHostsKey,
-		mapToStruct: makeMapToStruct(TestHosts{}),
+		mapToStruct: testHostsMapToStruct,
 		validate:    noValidateFunc,
 	}
 }
@@ -40,4 +40,12 @@ func DefaultTestHosts() TestHosts {
 		PingWaitTime: time.Second * 30,
 		PingRetries:  5,
 	}
+}
+
+func testHostsMapToStruct(m map[string]interface{}) (interface{}, error) {
+	var s TestHosts
+	if err := decodeStructFromMap(&s, m, nil); err != nil {
+		return nil, err
+	}
+	return s, nil
 }

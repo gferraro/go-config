@@ -21,11 +21,19 @@ const SecretsKey = "secrets"
 func init() {
 	allSections[SecretsKey] = section{
 		key:         SecretsKey,
-		mapToStruct: makeMapToStruct(Secrets{}),
+		mapToStruct: secretsMapToStruct,
 		validate:    noValidateFunc,
 	}
 }
 
 type Secrets struct {
 	DevicePassword string `mapstructure:"device-password"`
+}
+
+func secretsMapToStruct(m map[string]interface{}) (interface{}, error) {
+	var s Secrets
+	if err := decodeStructFromMap(&s, m, nil); err != nil {
+		return nil, err
+	}
+	return s, nil
 }

@@ -21,7 +21,7 @@ const ThermalMotionKey = "thermal-motion"
 func init() {
 	allSections[ThermalMotionKey] = section{
 		key:         ThermalMotionKey,
-		mapToStruct: makeMapToStruct(ThermalMotion{}),
+		mapToStruct: thermalMotionMapToStruct,
 		validate:    noValidateFunc,
 	}
 }
@@ -52,4 +52,12 @@ func DefaultThermalMotion() ThermalMotion {
 		WarmerOnly:       true,
 		EdgePixels:       1,
 	}
+}
+
+func thermalMotionMapToStruct(m map[string]interface{}) (interface{}, error) {
+	var s ThermalMotion
+	if err := decodeStructFromMap(&s, m, nil); err != nil {
+		return nil, err
+	}
+	return s, nil
 }

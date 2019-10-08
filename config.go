@@ -238,13 +238,14 @@ func SetLockFilePath(f func(string) string) {
 	lockFilePath = f
 }
 
-func decodeStructFromMap(s interface{}, m map[string]interface{}, decodeHook decodeHookFunc) error {
+func decodeStructFromMap(s interface{}, m map[string]interface{}, decodeHook interface{}) error {
 	decoderConfig := mapstructure.DecoderConfig{
+		DecodeHook:       mapstructure.ComposeDecodeHookFunc(stringToDuration, stringToTime),
 		Result:           s,
 		WeaklyTypedInput: true,
 	}
 	if decodeHook != nil {
-		decoderConfig.DecodeHook = decodeHook
+		decoderConfig.DecodeHook = mapstructure.ComposeDecodeHookFunc(decodeHook, decoderConfig.DecodeHook)
 	}
 	decoder, err := mapstructure.NewDecoder(&decoderConfig)
 	if err != nil {
@@ -253,13 +254,16 @@ func decodeStructFromMap(s interface{}, m map[string]interface{}, decodeHook dec
 	return decoder.Decode(m)
 }
 
-func stringToTime(f reflect.Type, t reflect.Type, data interface{}) (interface{}, error) {
-	if t != reflect.TypeOf(time.Time{}) {
+func stringToDuration(f reflect.Type, t reflect.Type, data interface{}) (interface{}, error) {
+	if t != reflect.TypeOf(time.Second) || f.Kind() != reflect.String {
 		return data, nil
 	}
-	switch f {
-	case reflect.TypeOf(""):
-		return time.Parse(TimeFormat, data.(string))
+	return time.ParseDuration(data.(string))
+}
+
+func stringToTime(f reflect.Type, t reflect.Type, data interface{}) (interface{}, error) {
+	if t != reflect.TypeOf(time.Time{}) || f.Kind() != reflect.String {
+		return data, nil
 	}
-	return data, nil
+	return time.Parse(TimeFormat, data.(string))
 }

@@ -21,7 +21,7 @@ const LeptonKey = "lepton"
 func init() {
 	allSections[LeptonKey] = section{
 		key:         LeptonKey,
-		mapToStruct: makeMapToStruct(Lepton{}),
+		mapToStruct: leptonMapToStruct,
 		validate:    noValidateFunc,
 	}
 }
@@ -36,4 +36,12 @@ func DefaultLepton() Lepton {
 		SPISpeed:    2000000,
 		FrameOutput: "/var/run/lepton-frames",
 	}
+}
+
+func leptonMapToStruct(m map[string]interface{}) (interface{}, error) {
+	var s Lepton
+	if err := decodeStructFromMap(&s, m, nil); err != nil {
+		return nil, err
+	}
+	return s, nil
 }
