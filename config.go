@@ -147,6 +147,7 @@ func (c *Config) SetField(sectionKey, valueKey, value string) error {
 	s := map[string]interface{}{}
 	c.Unmarshal(section.key, &s)
 	s[valueKey] = value
+	delete(s, "updated")
 	return c.SetFromMap(sectionKey, s)
 }
 
@@ -267,6 +268,7 @@ func decodeStructFromMap(s interface{}, m map[string]interface{}, decodeHook int
 		DecodeHook:       mapstructure.ComposeDecodeHookFunc(stringToDuration, stringToTime),
 		Result:           s,
 		WeaklyTypedInput: true,
+		ErrorUnused:      true,
 	}
 	if decodeHook != nil {
 		decoderConfig.DecodeHook = mapstructure.ComposeDecodeHookFunc(decodeHook, decoderConfig.DecodeHook)

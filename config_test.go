@@ -276,6 +276,8 @@ func TestSetField(t *testing.T) {
 	require.NoError(t, conf.Set(AudioKey, audio))
 
 	require.NoError(t, conf.SetField(AudioKey, "card", "5"))
+	require.Error(t, conf.SetField(AudioKey, "not-a-key", "5"))
+
 	var audio2 Audio
 	require.NoError(t, conf.Unmarshal(AudioKey, &audio2))
 
