@@ -230,7 +230,7 @@ type motionConfig struct {
 }
 
 type throttlerConfig struct {
-	ApplyThrottling bool          `yaml:"apply-throttling" mapstructure:"thermal-throttler.active"`
+	ApplyThrottling bool          `yaml:"apply-throttling" mapstructure:"thermal-throttler.activate"`
 	BucketSize      time.Duration `yaml:"bucket-size" mapstructure:"thermal-throttler.bucket-size"`
 	MinRefill       time.Duration `yaml:"min-refill" mapstructure:"thermal-throttler.min-refill"`
 }
