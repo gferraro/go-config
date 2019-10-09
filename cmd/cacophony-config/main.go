@@ -31,6 +31,7 @@ func runMain() error {
 	if err != nil {
 		return err
 	}
+	conf.AutoWrite = false // Only write if there were no errors in writing all the settings
 
 	sections := map[string]int{}
 	for _, s := range settings {
@@ -40,6 +41,9 @@ func runMain() error {
 		if _, ok := sections[s.section]; !ok {
 			sections[s.section] = 0
 		}
+	}
+	if err := conf.Write(); err != nil {
+		return err
 	}
 
 	for section, _ := range sections {

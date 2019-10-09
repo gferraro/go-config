@@ -38,6 +38,7 @@ type Config struct {
 	v                *viper.Viper
 	fileLock         *flock.Flock
 	accessedSections map[string]struct{} //TODO record each section accessed for restarting service purpose
+	AutoWrite        bool
 }
 
 const (
@@ -72,8 +73,9 @@ func New(dir string) (*Config, error) {
 	// TODO Take service name and restart service if config changes
 	configFile := path.Join(dir, ConfigFileName)
 	c := &Config{
-		v:        viper.New(),
-		fileLock: flock.New(lockFilePath(configFile)),
+		v:         viper.New(),
+		fileLock:  flock.New(lockFilePath(configFile)),
+		AutoWrite: true,
 	}
 	c.v.SetFs(fs)
 	c.v.SetConfigFile(configFile)
@@ -108,7 +110,10 @@ func (c *Config) Set(key string, value interface{}) error {
 		return c.setStruct(key, value)
 	}
 	c.set(key, value)
-	return c.v.WriteConfig()
+	if c.AutoWrite {
+		return c.v.WriteConfig()
+	}
+	return nil
 }
 
 // SetFromMap can only update one section at a time.
@@ -181,7 +186,10 @@ func (c *Config) Unset(key string) error {
 		return err
 	}
 	c.v.Set(key+".updated", now())
-	return c.v.WriteConfig()
+	if c.AutoWrite {
+		return c.v.WriteConfig()
+	}
+	return nil
 }
 
 var errNoFileLock = errors.New("failed to get lock on file")
@@ -218,6 +226,13 @@ func (c *Config) setStruct(key string, value interface{}) error {
 		return err
 	}
 	c.set(key, m)
+	if c.AutoWrite {
+		return c.v.WriteConfig()
+	}
+	return nil
+}
+
+func (c *Config) Write() error {
 	return c.v.WriteConfig()
 }
 
