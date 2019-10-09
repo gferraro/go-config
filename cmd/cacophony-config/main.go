@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"log"
 	"strings"
@@ -14,6 +15,7 @@ var version = "<not set>"
 type Args struct {
 	ConfigDir string   `arg:"-c,--config" help:"path to configuration directory"`
 	Write     bool     `arg:"-w,--write" help:"write to config file"`
+	Read      bool     `arg:"-r,--read" help:"read from the config file"`
 	Input     []string `arg:"positional"`
 }
 
@@ -41,6 +43,25 @@ func runMain() error {
 
 	if args.Write {
 		return writeNewSettings(&args)
+	}
+	if args.Read {
+		return readConfig(&args)
+	}
+	return errors.New("no valid arguments given")
+}
+
+func readConfig(args *Args) error {
+	conf, err := config.New(args.ConfigDir)
+	if err != nil {
+		return err
+	}
+
+	for _, section := range args.Input {
+		var m map[string]interface{}
+		if err := conf.Unmarshal(section, &m); err != nil {
+			return err
+		}
+		log.Printf("section: '%s', values: '%s'", section, m)
 	}
 	return nil
 }
