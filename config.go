@@ -124,16 +124,25 @@ func (c *Config) SetFromMap(sectionKey string, newConfig map[string]interface{})
 		return err
 	}
 
-	section, ok := allSections[sectionKey]
-	if !ok {
-		return fmt.Errorf("no section found called '%s'", sectionKey)
-	}
+	section := allSections[sectionKey]
 	newStruct, err := section.mapToStruct(newConfig)
 	if err != nil {
 		return err
 	}
 
 	return c.Set(sectionKey, newStruct)
+}
+
+func (c *Config) SetField(sectionKey, valueKey, value string) error {
+	if !checkIfSectionKey(sectionKey) {
+		return notSectionKeyError(sectionKey)
+	}
+
+	section := allSections[sectionKey]
+	s := map[string]interface{}{}
+	c.Unmarshal(section.key, &s)
+	s[valueKey] = value
+	return c.SetFromMap(sectionKey, s)
 }
 
 func (c *Config) Update() error {
@@ -213,7 +222,7 @@ func (c *Config) setStruct(key string, value interface{}) error {
 }
 
 func notSectionKeyError(key string) error {
-	return fmt.Errorf("'%s' is no a key for a section", key)
+	return fmt.Errorf("'%s' is not a key for a section", key)
 }
 
 func checkIfSectionKey(key string) bool {

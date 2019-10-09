@@ -264,7 +264,36 @@ func TestMapToStruct(t *testing.T) {
 	checkWritingMap(t, ModemdKey, &Modemd{}, &modemdExpected, modemdMap, conf)
 }
 
-func checkWritingMap(t *testing.T, key string, s, expected interface{}, m map[string]interface{}, conf *Config) {
+func TestSetField(t *testing.T) {
+	defer newFs(t, "")()
+	conf, err := New(DefaultConfigDir)
+	require.NoError(t, err)
+	audio := Audio{
+		Dir:           "/audio/directory",
+		Card:          4,
+		VolumeControl: "audio volume control",
+	}
+	require.NoError(t, conf.Set(AudioKey, audio))
+
+	require.NoError(t, conf.SetField(AudioKey, "card", "5"))
+	var audio2 Audio
+	require.NoError(t, conf.Unmarshal(AudioKey, &audio2))
+
+	audioExpected := Audio{
+		Dir:           "/audio/directory",
+		Card:          5,
+		VolumeControl: "audio volume control",
+	}
+
+	require.Equal(t, audioExpected, audio2)
+}
+
+func checkWritingMap(
+	t *testing.T,
+	key string,
+	s, expected interface{},
+	m map[string]interface{},
+	conf *Config) {
 	require.NoError(t, conf.SetFromMap(key, m))
 	require.NoError(t, conf.Unmarshal(key, s))
 	require.Equal(t, expected, s)
