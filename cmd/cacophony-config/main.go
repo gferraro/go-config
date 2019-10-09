@@ -32,10 +32,22 @@ func runMain() error {
 		return err
 	}
 
+	sections := map[string]int{}
 	for _, s := range settings {
 		if err := conf.SetField(s.section, s.field, s.value); err != nil {
 			return err
 		}
+		if _, ok := sections[s.section]; !ok {
+			sections[s.section] = 0
+		}
+	}
+
+	for section, _ := range sections {
+		raw := map[string]interface{}{}
+		if err := conf.Unmarshal(section, &raw); err != nil {
+			return err
+		}
+		log.Printf("section: '%s', values: '%s'", section, raw)
 	}
 
 	return nil
