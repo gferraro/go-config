@@ -209,9 +209,8 @@ func TestSettingUpdated(t *testing.T) {
 	require.Equal(t, conf.Get(DeviceKey+".updated"), now())
 }
 
-func TestMapToStruct(t *testing.T) {
+func TestMapToLocation(t *testing.T) {
 	defer newFs(t, "")()
-
 	conf, err := New(DefaultConfigDir)
 	require.NoError(t, err)
 
@@ -228,7 +227,12 @@ func TestMapToStruct(t *testing.T) {
 	require.NoError(t, conf.SetFromMap(LocationKey, locationMap))
 	require.NoError(t, conf.Unmarshal(LocationKey, &location))
 	equalLocation(t, locationExpected, location)
+}
 
+func TestMapToAudio(t *testing.T) {
+	defer newFs(t, "")()
+	conf, err := New(DefaultConfigDir)
+	require.NoError(t, err)
 	audioMap := map[string]interface{}{
 		"directory":      "/audio/directory",
 		"card":           "4",
@@ -240,15 +244,30 @@ func TestMapToStruct(t *testing.T) {
 		VolumeControl: "audio volume control",
 	}
 	checkWritingMap(t, AudioKey, &Audio{}, &audioExpected, audioMap, conf)
+}
 
+func TestMapToBattery(t *testing.T) {
+	defer newFs(t, "")()
+	conf, err := New(DefaultConfigDir)
+	require.NoError(t, err)
 	batteryMap := map[string]interface{}{"enable-voltage-readings": "true"}
 	batteryExpected := Battery{EnableVoltageReadings: true}
 	checkWritingMap(t, BatteryKey, &Battery{}, &batteryExpected, batteryMap, conf)
+}
 
+func TestMapToDevice(t *testing.T) {
+	defer newFs(t, "")()
+	conf, err := New(DefaultConfigDir)
+	require.NoError(t, err)
 	deviceMap := map[string]interface{}{"Group": "a-group"}
 	deviceExpected := Device{Group: "a-group"}
 	checkWritingMap(t, DeviceKey, &Device{}, &deviceExpected, deviceMap, conf)
+}
 
+func TestMapToModemd(t *testing.T) {
+	defer newFs(t, "")()
+	conf, err := New(DefaultConfigDir)
+	require.NoError(t, err)
 	modemdMap := map[string]interface{}{
 		"test-interval": "10m4s",
 		"modems": []map[string]interface{}{

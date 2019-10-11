@@ -85,14 +85,12 @@ func writeNewSettings(args *Args) error {
 	}
 	conf.AutoWrite = false // Only write if there were no errors in writing all the settings
 
-	sections := map[string]int{}
+	sections := map[string]struct{}{}
 	for _, s := range settings {
 		if err := conf.SetField(s.section, s.field, s.value); err != nil {
 			return err
 		}
-		if _, ok := sections[s.section]; !ok {
-			sections[s.section] = 0
-		}
+		sections[s.section] = struct{}{}
 	}
 	if err := conf.Write(); err != nil {
 		return err
