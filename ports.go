@@ -18,6 +18,14 @@ package config
 
 const PortsKey = "ports"
 
+func init() {
+	allSections[PortsKey] = section{
+		key:         PortsKey,
+		mapToStruct: portsMapToStruct,
+		validate:    noValidateFunc,
+	}
+}
+
 type Ports struct {
 	Managementd int
 }
@@ -27,4 +35,11 @@ func DefaultPorts() Ports {
 	return Ports{
 		Managementd: 80,
 	}
+}
+func portsMapToStruct(m map[string]interface{}) (interface{}, error) {
+	var s Ports
+	if err := decodeStructFromMap(&s, m, nil); err != nil {
+		return nil, err
+	}
+	return s, nil
 }

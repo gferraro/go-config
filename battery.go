@@ -18,9 +18,25 @@ package config
 
 const BatteryKey = "battery"
 
+func init() {
+	allSections[BatteryKey] = section{
+		key:         BatteryKey,
+		mapToStruct: batteryMapToStruct,
+		validate:    noValidateFunc,
+	}
+}
+
 type Battery struct {
 	EnableVoltageReadings bool   `mapstructure:"enable-voltage-readings"`
 	NoBattery             uint16 `mapstructure:"no-battery-reading"`
 	LowBattery            uint16 `mapstructure:"low-battery-reading"`
 	FullBattery           uint16 `mapstructure:"full-battery-reading"`
+}
+
+func batteryMapToStruct(m map[string]interface{}) (interface{}, error) {
+	var s Battery
+	if err := decodeStructFromMap(&s, m, nil); err != nil {
+		return nil, err
+	}
+	return s, nil
 }

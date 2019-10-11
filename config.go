@@ -20,6 +20,7 @@ import (
 	"bytes"
 	"context"
 	"errors"
+	"fmt"
 	"path"
 	"reflect"
 	"strings"
@@ -37,13 +38,26 @@ type Config struct {
 	v                *viper.Viper
 	fileLock         *flock.Flock
 	accessedSections map[string]struct{} //TODO record each section accessed for restarting service purpose
+	AutoWrite        bool
 }
 
 const (
 	DefaultConfigDir = "/etc/cacophony"
 	ConfigFileName   = "config.toml"
 	lockRetryDelay   = 678 * time.Millisecond
+	TimeFormat       = time.RFC3339
 )
+
+type section struct {
+	key         string
+	mapToStruct func(map[string]interface{}) (interface{}, error)
+	validate    func(interface{}) error
+}
+
+type decodeHookFunc func(reflect.Type, reflect.Type, interface{}) (interface{}, error)
+
+var allSections = map[string]section{} // each different section file has an init function that will add to this.
+var allSectionDecodeHookFuncs = []mapstructure.DecodeHookFunc{}
 
 // Helpers for testing purposes
 var fs = afero.NewOsFs()
@@ -59,8 +73,9 @@ func New(dir string) (*Config, error) {
 	// TODO Take service name and restart service if config changes
 	configFile := path.Join(dir, ConfigFileName)
 	c := &Config{
-		v:        viper.New(),
-		fileLock: flock.New(lockFilePath(configFile)),
+		v:         viper.New(),
+		fileLock:  flock.New(lockFilePath(configFile)),
+		AutoWrite: true,
 	}
 	c.v.SetFs(fs)
 	c.v.SetConfigFile(configFile)
@@ -78,7 +93,11 @@ func (c *Config) Unmarshal(key string, raw interface{}) error {
 	return c.v.UnmarshalKey(key, raw)
 }
 
+// Set can only update one section at a time.
 func (c *Config) Set(key string, value interface{}) error {
+	if !checkIfSectionKey(key) {
+		return notSectionKeyError(key)
+	}
 	if err := c.getFileLock(); err != nil {
 		return err
 	}
@@ -91,7 +110,45 @@ func (c *Config) Set(key string, value interface{}) error {
 		return c.setStruct(key, value)
 	}
 	c.set(key, value)
-	return c.v.WriteConfig()
+	if c.AutoWrite {
+		return c.v.WriteConfig()
+	}
+	return nil
+}
+
+// SetFromMap can only update one section at a time.
+func (c *Config) SetFromMap(sectionKey string, newConfig map[string]interface{}) error {
+	if !checkIfSectionKey(sectionKey) {
+		return notSectionKeyError(sectionKey)
+	}
+	if err := c.getFileLock(); err != nil {
+		return err
+	}
+	defer c.fileLock.Unlock()
+	if err := c.Update(); err != nil {
+		return err
+	}
+
+	section := allSections[sectionKey]
+	newStruct, err := section.mapToStruct(newConfig)
+	if err != nil {
+		return err
+	}
+
+	return c.Set(sectionKey, newStruct)
+}
+
+func (c *Config) SetField(sectionKey, valueKey, value string) error {
+	if !checkIfSectionKey(sectionKey) {
+		return notSectionKeyError(sectionKey)
+	}
+
+	section := allSections[sectionKey]
+	s := map[string]interface{}{}
+	c.Unmarshal(section.key, &s)
+	s[valueKey] = value
+	delete(s, "updated")
+	return c.SetFromMap(sectionKey, s)
 }
 
 func (c *Config) Update() error {
@@ -130,7 +187,10 @@ func (c *Config) Unset(key string) error {
 		return err
 	}
 	c.v.Set(key+".updated", now())
-	return c.v.WriteConfig()
+	if c.AutoWrite {
+		return c.v.WriteConfig()
+	}
+	return nil
 }
 
 var errNoFileLock = errors.New("failed to get lock on file")
@@ -148,8 +208,9 @@ func (c *Config) getFileLock() error {
 }
 
 func interfaceToMap(value interface{}) (m map[string]interface{}, err error) {
+	decodeHookFuncs := mapstructure.ComposeDecodeHookFunc(allSectionDecodeHookFuncs...)
 	decoderConfig := mapstructure.DecoderConfig{
-		DecodeHook: locationToMap,
+		DecodeHook: decodeHookFuncs,
 		Result:     &m,
 	}
 	decoder, err := mapstructure.NewDecoder(&decoderConfig)
@@ -166,7 +227,23 @@ func (c *Config) setStruct(key string, value interface{}) error {
 		return err
 	}
 	c.set(key, m)
+	if c.AutoWrite {
+		return c.v.WriteConfig()
+	}
+	return nil
+}
+
+func (c *Config) Write() error {
 	return c.v.WriteConfig()
+}
+
+func notSectionKeyError(key string) error {
+	return fmt.Errorf("'%s' is not a key for a section", key)
+}
+
+func checkIfSectionKey(key string) bool {
+	_, ok := allSections[key]
+	return ok
 }
 
 func (c *Config) set(key string, value interface{}) {
@@ -184,4 +261,35 @@ func SetFs(f afero.Fs) {
 
 func SetLockFilePath(f func(string) string) {
 	lockFilePath = f
+}
+
+func decodeStructFromMap(s interface{}, m map[string]interface{}, decodeHook interface{}) error {
+	decoderConfig := mapstructure.DecoderConfig{
+		DecodeHook:       mapstructure.ComposeDecodeHookFunc(stringToDuration, stringToTime),
+		Result:           s,
+		WeaklyTypedInput: true,
+		ErrorUnused:      true,
+	}
+	if decodeHook != nil {
+		decoderConfig.DecodeHook = mapstructure.ComposeDecodeHookFunc(decodeHook, decoderConfig.DecodeHook)
+	}
+	decoder, err := mapstructure.NewDecoder(&decoderConfig)
+	if err != nil {
+		return err
+	}
+	return decoder.Decode(m)
+}
+
+func stringToDuration(f reflect.Type, t reflect.Type, data interface{}) (interface{}, error) {
+	if t != reflect.TypeOf(time.Second) || f.Kind() != reflect.String {
+		return data, nil
+	}
+	return time.ParseDuration(data.(string))
+}
+
+func stringToTime(f reflect.Type, t reflect.Type, data interface{}) (interface{}, error) {
+	if t != reflect.TypeOf(time.Time{}) || f.Kind() != reflect.String {
+		return data, nil
+	}
+	return time.Parse(TimeFormat, data.(string))
 }

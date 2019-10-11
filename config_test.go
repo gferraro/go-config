@@ -207,9 +207,117 @@ func TestSettingUpdated(t *testing.T) {
 
 	require.NoError(t, conf.Set(DeviceKey, randomDevice()))
 	require.Equal(t, conf.Get(DeviceKey+".updated"), now())
+}
 
-	require.NoError(t, conf.Set(DeviceKey+".name", randString(10)))
-	require.Equal(t, conf.Get(DeviceKey+".updated"), now())
+func TestMapToLocation(t *testing.T) {
+	defer newFs(t, "")()
+	conf, err := New(DefaultConfigDir)
+	require.NoError(t, err)
+
+	newNow()
+	locationMap := map[string]interface{}{
+		"latitude":  "123.321",
+		"timestamp": now().Format(TimeFormat),
+	}
+	locationExpected := Location{
+		Latitude:  123.321,
+		Timestamp: now(),
+	}
+	var location Location
+	require.NoError(t, conf.SetFromMap(LocationKey, locationMap))
+	require.NoError(t, conf.Unmarshal(LocationKey, &location))
+	equalLocation(t, locationExpected, location)
+}
+
+func TestMapToAudio(t *testing.T) {
+	defer newFs(t, "")()
+	conf, err := New(DefaultConfigDir)
+	require.NoError(t, err)
+	audioMap := map[string]interface{}{
+		"directory":      "/audio/directory",
+		"card":           "4",
+		"volume-control": "audio volume control",
+	}
+	audioExpected := Audio{
+		Dir:           "/audio/directory",
+		Card:          4,
+		VolumeControl: "audio volume control",
+	}
+	checkWritingMap(t, AudioKey, &Audio{}, &audioExpected, audioMap, conf)
+}
+
+func TestMapToBattery(t *testing.T) {
+	defer newFs(t, "")()
+	conf, err := New(DefaultConfigDir)
+	require.NoError(t, err)
+	batteryMap := map[string]interface{}{"enable-voltage-readings": "true"}
+	batteryExpected := Battery{EnableVoltageReadings: true}
+	checkWritingMap(t, BatteryKey, &Battery{}, &batteryExpected, batteryMap, conf)
+}
+
+func TestMapToDevice(t *testing.T) {
+	defer newFs(t, "")()
+	conf, err := New(DefaultConfigDir)
+	require.NoError(t, err)
+	deviceMap := map[string]interface{}{"Group": "a-group"}
+	deviceExpected := Device{Group: "a-group"}
+	checkWritingMap(t, DeviceKey, &Device{}, &deviceExpected, deviceMap, conf)
+}
+
+func TestMapToModemd(t *testing.T) {
+	defer newFs(t, "")()
+	conf, err := New(DefaultConfigDir)
+	require.NoError(t, err)
+	modemdMap := map[string]interface{}{
+		"test-interval": "10m4s",
+		"modems": []map[string]interface{}{
+			map[string]interface{}{
+				"name": "modem name",
+			},
+		},
+	}
+	modemdExpected := Modemd{
+		TestInterval: 10*time.Minute + 4*time.Second,
+		Modems:       []Modem{Modem{Name: "modem name"}},
+	}
+	checkWritingMap(t, ModemdKey, &Modemd{}, &modemdExpected, modemdMap, conf)
+}
+
+func TestSetField(t *testing.T) {
+	defer newFs(t, "")()
+	conf, err := New(DefaultConfigDir)
+	require.NoError(t, err)
+	audio := Audio{
+		Dir:           "/audio/directory",
+		Card:          4,
+		VolumeControl: "audio volume control",
+	}
+	require.NoError(t, conf.Set(AudioKey, audio))
+
+	require.NoError(t, conf.SetField(AudioKey, "card", "5"))
+	require.Error(t, conf.SetField(AudioKey, "not-a-key", "5"))
+
+	var audio2 Audio
+	require.NoError(t, conf.Unmarshal(AudioKey, &audio2))
+
+	audioExpected := Audio{
+		Dir:           "/audio/directory",
+		Card:          5,
+		VolumeControl: "audio volume control",
+	}
+
+	require.Equal(t, audioExpected, audio2)
+}
+
+func checkWritingMap(
+	t *testing.T,
+	key string,
+	s, expected interface{},
+	m map[string]interface{},
+	conf *Config) {
+	require.NoError(t, conf.SetFromMap(key, m))
+	require.NoError(t, conf.Unmarshal(key, s))
+	require.Equal(t, expected, s)
 }
 
 func newFs(t *testing.T, configFile string) func() {

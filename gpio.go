@@ -18,6 +18,14 @@ package config
 
 const GPIOKey = "gpio"
 
+func init() {
+	allSections[GPIOKey] = section{
+		key:         GPIOKey,
+		mapToStruct: gpioMapToStruct,
+		validate:    noValidateFunc,
+	}
+}
+
 type GPIO struct {
 	ThermalCameraPower string `mapstructure:"thermal-camera-power"`
 	ModemPower         string `mapstructure:"modem-power"`
@@ -28,4 +36,12 @@ func DefaultGPIO() GPIO {
 		ThermalCameraPower: "GPIO23",
 		ModemPower:         "GPIO22",
 	}
+}
+
+func gpioMapToStruct(m map[string]interface{}) (interface{}, error) {
+	var s GPIO
+	if err := decodeStructFromMap(&s, m, nil); err != nil {
+		return nil, err
+	}
+	return s, nil
 }

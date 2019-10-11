@@ -18,6 +18,14 @@ package config
 
 const ThermalMotionKey = "thermal-motion"
 
+func init() {
+	allSections[ThermalMotionKey] = section{
+		key:         ThermalMotionKey,
+		mapToStruct: thermalMotionMapToStruct,
+		validate:    noValidateFunc,
+	}
+}
+
 type ThermalMotion struct {
 	DynamicThreshold bool   `mapstructure:"min-secs"`
 	TempThresh       uint16 `mapstructure:"temp-thresh"`
@@ -44,4 +52,12 @@ func DefaultThermalMotion() ThermalMotion {
 		WarmerOnly:       true,
 		EdgePixels:       1,
 	}
+}
+
+func thermalMotionMapToStruct(m map[string]interface{}) (interface{}, error) {
+	var s ThermalMotion
+	if err := decodeStructFromMap(&s, m, nil); err != nil {
+		return nil, err
+	}
+	return s, nil
 }

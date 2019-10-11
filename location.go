@@ -23,6 +23,15 @@ import (
 	"github.com/mitchellh/mapstructure"
 )
 
+func init() {
+	allSections[LocationKey] = section{
+		key:         LocationKey,
+		mapToStruct: mapToLocation,
+		validate:    validateLocation,
+	}
+	allSectionDecodeHookFuncs = append(allSectionDecodeHookFuncs, locationToMap)
+}
+
 const LocationKey = "location"
 
 type Location struct {
@@ -57,4 +66,20 @@ func locationToMap(f reflect.Type, t reflect.Type, data interface{}) (interface{
 	default:
 		return data, nil
 	}
+}
+
+func mapToLocation(m map[string]interface{}) (interface{}, error) {
+	var l Location
+	if err := decodeStructFromMap(&l, m, stringToTime); err != nil {
+		return nil, err
+	}
+	if err := validateLocation(&l); err != nil {
+		return nil, err
+	}
+	return l, nil
+}
+
+//TODO
+func validateLocation(l interface{}) error {
+	return nil
 }

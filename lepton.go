@@ -18,6 +18,14 @@ package config
 
 const LeptonKey = "lepton"
 
+func init() {
+	allSections[LeptonKey] = section{
+		key:         LeptonKey,
+		mapToStruct: leptonMapToStruct,
+		validate:    noValidateFunc,
+	}
+}
+
 type Lepton struct {
 	SPISpeed    int64  `mapstructure:"spi-speed"`
 	FrameOutput string `mapstructure:"frame-output"`
@@ -28,4 +36,12 @@ func DefaultLepton() Lepton {
 		SPISpeed:    2000000,
 		FrameOutput: "/var/run/lepton-frames",
 	}
+}
+
+func leptonMapToStruct(m map[string]interface{}) (interface{}, error) {
+	var s Lepton
+	if err := decodeStructFromMap(&s, m, nil); err != nil {
+		return nil, err
+	}
+	return s, nil
 }

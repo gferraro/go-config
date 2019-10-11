@@ -18,6 +18,14 @@ package config
 
 const AudioKey = "audio"
 
+func init() {
+	allSections[AudioKey] = section{
+		key:         AudioKey,
+		mapToStruct: audioMapToStruct,
+		validate:    noValidateFunc,
+	}
+}
+
 type Audio struct {
 	Dir           string `mapstructure:"directory"`
 	Card          int    `mapstructure:"card"`
@@ -30,4 +38,12 @@ func DefaultAudio() Audio {
 		Card:          0,
 		VolumeControl: "PCM",
 	}
+}
+
+func audioMapToStruct(m map[string]interface{}) (interface{}, error) {
+	var s Audio
+	if err := decodeStructFromMap(&s, m, nil); err != nil {
+		return nil, err
+	}
+	return s, nil
 }

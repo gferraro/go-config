@@ -20,6 +20,14 @@ import "time"
 
 const ThermalThrottlerKey = "thermal-throttler"
 
+func init() {
+	allSections[ThermalThrottlerKey] = section{
+		key:         ThermalThrottlerKey,
+		mapToStruct: thermalThrottlerMapToStruct,
+		validate:    noValidateFunc,
+	}
+}
+
 type ThermalThrottler struct {
 	Activate   bool
 	BucketSize time.Duration `mapstructure:"bucket-size"`
@@ -33,4 +41,12 @@ func DefaultThermalThrottler() ThermalThrottler {
 		BucketSize: 10 * time.Minute,
 		MinRefill:  10 * time.Minute,
 	}
+}
+
+func thermalThrottlerMapToStruct(m map[string]interface{}) (interface{}, error) {
+	var s ThermalThrottler
+	if err := decodeStructFromMap(&s, m, nil); err != nil {
+		return nil, err
+	}
+	return s, nil
 }

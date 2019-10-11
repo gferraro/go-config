@@ -7,7 +7,8 @@ release:
   name_template: '{{.Tag}}'
 
 builds:
-- goos:
+- id: cacophony-config-import
+  goos:
   - linux
   goarch:
   - arm
@@ -16,6 +17,16 @@ builds:
   main: ./cmd/cacophony-config-import
   ldflags: -s -w -X main.version={{.Version}}
   binary: cacophony-config-import
+- id: cacophony-config
+  goos:
+  - linux
+  goarch:
+  - arm
+  goarm:
+  - "7"
+  main: ./cmd/cacophony-config
+  ldflags: -s -w -X main.version={{.Version}}
+  binary: cacophony-config
 
 nfpms:
 - vendor: The Cacophony Project

@@ -18,9 +18,25 @@ package config
 
 const DeviceKey = "device"
 
+func init() {
+	allSections[DeviceKey] = section{
+		key:         DeviceKey,
+		mapToStruct: deviceMapToStruct,
+		validate:    noValidateFunc,
+	}
+}
+
 type Device struct {
 	Group  string
 	ID     int
 	Name   string
 	Server string
+}
+
+func deviceMapToStruct(m map[string]interface{}) (interface{}, error) {
+	var s Device
+	if err := decodeStructFromMap(&s, m, nil); err != nil {
+		return nil, err
+	}
+	return s, nil
 }

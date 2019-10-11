@@ -16,9 +16,23 @@
 
 package config
 
-import "time"
+import (
+	"reflect"
+	"time"
+
+	"github.com/mitchellh/mapstructure"
+)
 
 const ModemdKey = "modemd"
+
+func init() {
+	allSections[ModemdKey] = section{
+		key:         ModemdKey,
+		mapToStruct: modemdMapToStruct,
+		validate:    noValidateFunc,
+	}
+	allSectionDecodeHookFuncs = append(allSectionDecodeHookFuncs, modemdToMap)
+}
 
 type Modemd struct {
 	TestInterval      time.Duration `mapstructure:"test-interval"`
@@ -47,4 +61,36 @@ func DefaultModemd() Modemd {
 			Modem{Name: "Spark 3G modem", NetDev: "usb0", VendorProductID: "19d2:1405"},
 		},
 	}
+}
+
+func modemdToMap(f reflect.Type, t reflect.Type, data interface{}) (interface{}, error) {
+	if t != mapStrInterfaceType {
+		return data, nil
+	}
+	switch f {
+	case reflect.TypeOf(&Modemd{}):
+		data = *(data.(*Modemd)) // follow the pointer
+		fallthrough
+	case reflect.TypeOf(Modemd{}):
+		m := map[string]interface{}{}
+		if err := mapstructure.Decode(data, &m); err != nil {
+			return nil, err
+		}
+		modems := []map[string]interface{}{}
+		if err := mapstructure.Decode(data.(Modemd).Modems, &modems); err != nil {
+			return nil, err
+		}
+		m["modems"] = modems
+		return m, nil
+	default:
+		return data, nil
+	}
+}
+
+func modemdMapToStruct(m map[string]interface{}) (interface{}, error) {
+	var s Modemd
+	if err := decodeStructFromMap(&s, m, nil); err != nil {
+		return nil, err
+	}
+	return s, nil
 }
