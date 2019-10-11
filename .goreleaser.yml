@@ -38,6 +38,8 @@ nfpms:
   formats:
     - deb
   bindir: /usr/bin
+  files:
+    "_release/cacophony-config-import.service": "/etc/systemd/system/cacophony-config-import.service"
 
 checksum:
   name_template: '{{ .ProjectName }}_{{ .Version }}_checksums.txt'
