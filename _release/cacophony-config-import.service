@@ -1,6 +1,6 @@
 [Unit]
 Description=Import old config to new config
-After=multi-user.target network.target
+After=basic.target
 ConditionPathExists=!/etc/cacophony/config.toml
 
 [Service]
@@ -8,4 +8,4 @@ ExecStart=/usr/bin/cacophony-config-import
 Type=oneshot
 
 [Install]
-WantedBy=multi-user.target
+WantedBy=basic.target
