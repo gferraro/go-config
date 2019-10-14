@@ -3,7 +3,7 @@ project_name: cacophony-config
 release:
   github:
     owner: TheCacophonyProject
-    name: cacophony-config
+    name: go-config
   name_template: '{{.Tag}}'
 
 builds:
