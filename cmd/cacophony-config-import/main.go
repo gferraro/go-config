@@ -99,7 +99,7 @@ func isSlice(x interface{}) bool {
 
 func isZeroVal(x interface{}) bool {
 	switch reflect.ValueOf(x).Kind() {
-	case reflect.Slice, reflect.Slice:
+	case reflect.Slice, reflect.Map:
 		return reflect.ValueOf(x).IsNil()
 	}
 	return x == reflect.Zero(reflect.TypeOf(x)).Interface()
