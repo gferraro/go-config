@@ -71,7 +71,9 @@ func runMain() error {
 func interfaceToMap(value interface{}) (m map[string]interface{}, err error) {
 	err = mapstructure.Decode(value, &m)
 	for k, v := range m {
-		if isSlice(v) && isStruct(reflect.ValueOf(v).Index(0)) {
+		if isZeroVal(v) {
+			delete(m, k)
+		} else if isSlice(v) && isStruct(reflect.ValueOf(v).Index(0)) {
 			s := reflect.ValueOf(v)
 			sliceMap := make([]map[string]interface{}, 0)
 			for i := 0; i < s.Len(); i++ {
@@ -82,8 +84,6 @@ func interfaceToMap(value interface{}) (m map[string]interface{}, err error) {
 				sliceMap = append(sliceMap, m2)
 			}
 			m[k] = sliceMap
-		} else if isZeroVal(v) {
-			delete(m, k)
 		}
 	}
 	return
@@ -100,9 +100,9 @@ func isSlice(x interface{}) bool {
 func isZeroVal(x interface{}) bool {
 	switch reflect.ValueOf(x).Kind() {
 	case reflect.Slice:
-		return false
+		return reflect.ValueOf(x).IsNil()
 	case reflect.Map:
-		return false
+		return reflect.ValueOf(x).IsNil()
 	}
 	return x == reflect.Zero(reflect.TypeOf(x)).Interface()
 }
