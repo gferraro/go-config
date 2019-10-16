@@ -241,11 +241,11 @@ func processLocation(configDir string) (interface{}, error) {
 }
 
 type rawLocation struct {
-	Latitude     float32   `yaml:"latitude" mapstructure:"locaiton.latitude"`
-	Longitude    float32   `yaml:"longitude" mapstructure:"locaiton.longitude"`
-	LocTimestamp time.Time `yaml:"timestamp" mapstructure:"locaiton.updated"`
-	Altitude     float32   `yaml:"altitude" mapstructure:"locaiton.altitude"`
-	Accuracy     float32   `yaml:"accuracy" mapstructure:"locaiton.accuracy"`
+	Latitude     float32   `yaml:"latitude" mapstructure:"location.latitude"`
+	Longitude    float32   `yaml:"longitude" mapstructure:"location.longitude"`
+	LocTimestamp time.Time `yaml:"timestamp" mapstructure:"location.updated"`
+	Altitude     float32   `yaml:"altitude" mapstructure:"location.altitude"`
+	Accuracy     float32   `yaml:"accuracy" mapstructure:"location.accuracy"`
 }
 
 func processDevice(configDir string) (interface{}, error) {
