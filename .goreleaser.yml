@@ -38,8 +38,6 @@ nfpms:
   formats:
     - deb
   bindir: /usr/bin
-  files:
-    "_release/cacophony-config-import.service": "/etc/systemd/system/cacophony-config-import.service"
   scripts:
     postinstall: "_release/postinstall.sh"
 
