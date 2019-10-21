@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"io/ioutil"
 	"log"
 	"os"
@@ -48,7 +47,8 @@ func runMain() error {
 	v := viper.New()
 	configFile := path.Join(args.Dir, "config.toml")
 	if _, err := os.Stat(configFile); err == nil && !args.Force {
-		return fmt.Errorf("config file `%s` alread exists", configFile)
+		log.Printf("config file '%s' alread exists. Aborting writing new config", configFile)
+		return nil
 	}
 	v.SetConfigFile(configFile)
 	for _, f := range configProcessingFuncs {
