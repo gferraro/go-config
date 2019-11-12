@@ -27,7 +27,7 @@ func init() {
 }
 
 type ThermalMotion struct {
-	DynamicThreshold bool   `mapstructure:"min-secs"`
+	DynamicThreshold bool   `mapstructure:"dynamic-threshold"`
 	TempThresh       uint16 `mapstructure:"temp-thresh"`
 	DeltaThresh      uint16 `mapstructure:"delta-thresh"`
 	CountThresh      int    `mapstructure:"count-thresh"`
