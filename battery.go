@@ -33,6 +33,12 @@ type Battery struct {
 	FullBattery           uint16 `mapstructure:"full-battery-reading"`
 }
 
+func DefaultBattery() Battery {
+	return Battery{
+		EnableVoltageReadings: true,
+	}
+}
+
 func batteryMapToStruct(m map[string]interface{}) (interface{}, error) {
 	var s Battery
 	if err := decodeStructFromMap(&s, m, nil); err != nil {
