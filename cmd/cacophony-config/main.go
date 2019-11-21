@@ -55,12 +55,16 @@ func runMain() error {
 }
 
 func deleteConfig(args *Args) error {
-
-	_, err := config.New(args.ConfigDir)
+	conf, err := config.New(args.ConfigDir)
 	if err != nil {
 		return err
 	}
-
+	for _, key := range args.Input {
+		if err := conf.Unset(key); err != nil {
+			return err
+		}
+		log.Printf("deleted '%s'", key)
+	}
 	return nil
 }
 
