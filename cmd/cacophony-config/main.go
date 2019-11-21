@@ -16,6 +16,7 @@ type Args struct {
 	ConfigDir string   `arg:"-c,--config" help:"path to configuration directory"`
 	Write     bool     `arg:"-w,--write" help:"write to config file"`
 	Read      bool     `arg:"-r,--read" help:"read from the config file"`
+	Delete    bool     `arg:"-d,--delete" help:"delete from config file"`
 	Input     []string `arg:"positional"`
 }
 
@@ -47,7 +48,20 @@ func runMain() error {
 	if args.Read {
 		return readConfig(&args)
 	}
+	if args.Delete {
+		return deleteConfig(&args)
+	}
 	return errors.New("no valid arguments given")
+}
+
+func deleteConfig(args *Args) error {
+
+	_, err := config.New(args.ConfigDir)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func readConfig(args *Args) error {

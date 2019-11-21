@@ -163,6 +163,30 @@ func TestWriting(t *testing.T) {
 	require.Equal(t, h, h2)
 }
 
+func TestClearSection(t *testing.T) {
+	defer newFs(t, "")()
+	conf, err := New(DefaultConfigDir)
+	require.NoError(t, err)
+	log.Println()
+	l := randomLocation()
+	w := randomWindows()
+	require.NoError(t, conf.Set(LocationKey, &l))
+	require.NoError(t, conf.Set(WindowsKey, &w))
+	require.NoError(t, conf.Unset(LocationKey+".latitude"))
+	require.Error(t, conf.Unset(LocationKey+".latitude.foo"))
+	require.NoError(t, conf.Unset(LocationKey+".bar"))
+	conf, err = New(DefaultConfigDir)
+	require.NoError(t, err)
+	l2 := Location{}
+	require.NoError(t, conf.Unmarshal(LocationKey, &l2))
+
+	w2 := Windows{}
+	require.NoError(t, conf.Unmarshal(WindowsKey, &w2))
+	l.Latitude = 0
+	equalLocation(t, l, l2)
+	require.Equal(t, w, w2)
+}
+
 func TestClear(t *testing.T) {
 	defer newFs(t, "")()
 	conf, err := New(DefaultConfigDir)

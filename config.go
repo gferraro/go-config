@@ -168,7 +168,12 @@ func (c *Config) StrictSet(key string, value interface{}, time time.Time) error 
 
 func (c *Config) Unset(key string) error {
 	configMap := c.v.AllSettings()
-	delete(configMap, key)
+	path := strings.Split(key, ".")
+	deepestMap, err := deepSearch(configMap, path[0:len(path)-1])
+	if err != nil {
+		return err
+	}
+	delete(deepestMap, path[len(path)-1])
 	tomlTree, err := toml.TreeFromMap(configMap)
 	if err != nil {
 		return err
@@ -186,7 +191,7 @@ func (c *Config) Unset(key string) error {
 	if err := c.v.ReadConfig(bytes.NewReader(buf.Bytes())); err != nil {
 		return err
 	}
-	c.v.Set(key+".updated", now())
+	c.v.Set(path[0]+".updated", now())
 	if c.AutoWrite {
 		return c.v.WriteConfig()
 	}
@@ -292,4 +297,25 @@ func stringToTime(f reflect.Type, t reflect.Type, data interface{}) (interface{}
 		return data, nil
 	}
 	return time.Parse(TimeFormat, data.(string))
+}
+
+// Slightly edited from viper library: https://github.com/spf13/viper/blob/master/util.go#L199
+// deepSearch scans deep maps, following the key indexes listed in the
+// sequence "path".
+// The last value is expected to be another map, and is returned.
+//
+// In case intermediate keys do not exist, or map to a non-map value, an error is returned
+func deepSearch(m map[string]interface{}, path []string) (map[string]interface{}, error) {
+	for _, k := range path {
+		m2, ok := m[k]
+		if !ok {
+			return m, errors.New("error with following path in map")
+		}
+		m3, ok := m2.(map[string]interface{})
+		if !ok {
+			return m, errors.New("error with following path in map")
+		}
+		m = m3
+	}
+	return m, nil
 }
