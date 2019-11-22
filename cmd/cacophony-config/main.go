@@ -17,6 +17,7 @@ type Args struct {
 	Write     bool     `arg:"-w,--write" help:"write to config file"`
 	Read      bool     `arg:"-r,--read" help:"read from the config file"`
 	Delete    bool     `arg:"-d,--delete" help:"delete from config file"`
+	Force     bool     `arg:"-f,--force" help:"force writing to config if invalid keys are found"`
 	Input     []string `arg:"positional"`
 }
 
@@ -105,7 +106,7 @@ func writeNewSettings(args *Args) error {
 
 	sections := map[string]struct{}{}
 	for _, s := range settings {
-		if err := conf.SetField(s.section, s.field, s.value); err != nil {
+		if err := conf.SetField(s.section, s.field, s.value, args.Force); err != nil {
 			return err
 		}
 		sections[s.section] = struct{}{}

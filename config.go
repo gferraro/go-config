@@ -117,7 +117,7 @@ func (c *Config) Set(key string, value interface{}) error {
 }
 
 // SetFromMap can only update one section at a time.
-func (c *Config) SetFromMap(sectionKey string, newConfig map[string]interface{}) error {
+func (c *Config) SetFromMap(sectionKey string, newConfig map[string]interface{}, force bool) error {
 	if !checkIfSectionKey(sectionKey) {
 		return notSectionKeyError(sectionKey)
 	}
@@ -132,13 +132,18 @@ func (c *Config) SetFromMap(sectionKey string, newConfig map[string]interface{})
 	section := allSections[sectionKey]
 	newStruct, err := section.mapToStruct(newConfig)
 	if err != nil {
+		if force {
+			// If failed to convert new config map to a struct of that section then
+			// try writing to section with a map instead.
+			return c.Set(sectionKey, newConfig)
+		}
 		return err
 	}
 
 	return c.Set(sectionKey, newStruct)
 }
 
-func (c *Config) SetField(sectionKey, valueKey, value string) error {
+func (c *Config) SetField(sectionKey, valueKey, value string, force bool) error {
 	if !checkIfSectionKey(sectionKey) {
 		return notSectionKeyError(sectionKey)
 	}
@@ -148,7 +153,7 @@ func (c *Config) SetField(sectionKey, valueKey, value string) error {
 	c.Unmarshal(section.key, &s)
 	s[valueKey] = value
 	delete(s, "updated")
-	return c.SetFromMap(sectionKey, s)
+	return c.SetFromMap(sectionKey, s, force)
 }
 
 func (c *Config) Update() error {

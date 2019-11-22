@@ -131,6 +131,21 @@ func TestReadingConfigInDir(t *testing.T) {
 	assert.Equal(t, audioChanges, audio)
 }
 
+func TestSettingInvalidKeys(t *testing.T) {
+	defer newFs(t, "")()
+	conf, err := New(DefaultConfigDir)
+	require.NoError(t, err)
+
+	w := randomWindows()
+	require.NoError(t, conf.Set(WindowsKey, w))
+	m := map[string]interface{}{
+		"invalid-key": "a value",
+	}
+	require.Error(t, conf.SetFromMap(WindowsKey, m, false))
+	require.NoError(t, conf.SetFromMap(WindowsKey, m, true))
+	require.Equal(t, "a value", conf.Get("windows.invalid-key"))
+}
+
 func TestWriting(t *testing.T) {
 	defer newFs(t, "")()
 	conf, err := New(DefaultConfigDir)
@@ -248,7 +263,7 @@ func TestMapToLocation(t *testing.T) {
 		Timestamp: now(),
 	}
 	var location Location
-	require.NoError(t, conf.SetFromMap(LocationKey, locationMap))
+	require.NoError(t, conf.SetFromMap(LocationKey, locationMap, false))
 	require.NoError(t, conf.Unmarshal(LocationKey, &location))
 	equalLocation(t, locationExpected, location)
 }
@@ -318,8 +333,8 @@ func TestSetField(t *testing.T) {
 	}
 	require.NoError(t, conf.Set(AudioKey, audio))
 
-	require.NoError(t, conf.SetField(AudioKey, "card", "5"))
-	require.Error(t, conf.SetField(AudioKey, "not-a-key", "5"))
+	require.NoError(t, conf.SetField(AudioKey, "card", "5", false))
+	require.Error(t, conf.SetField(AudioKey, "not-a-key", "5", false))
 
 	var audio2 Audio
 	require.NoError(t, conf.Unmarshal(AudioKey, &audio2))
@@ -339,7 +354,7 @@ func checkWritingMap(
 	s, expected interface{},
 	m map[string]interface{},
 	conf *Config) {
-	require.NoError(t, conf.SetFromMap(key, m))
+	require.NoError(t, conf.SetFromMap(key, m, false))
 	require.NoError(t, conf.Unmarshal(key, s))
 	require.Equal(t, expected, s)
 }
