@@ -8,6 +8,7 @@ import (
 
 	config "github.com/TheCacophonyProject/go-config"
 	"github.com/alexflint/go-arg"
+	"github.com/pelletier/go-toml"
 )
 
 var version = "<not set>"
@@ -76,11 +77,9 @@ func readConfig(args *Args) error {
 	}
 
 	for _, section := range args.Input {
-		var m map[string]interface{}
-		if err := conf.Unmarshal(section, &m); err != nil {
+		if err := printSection(section, conf); err != nil {
 			return err
 		}
-		log.Printf("section: '%s', values: '%s'", section, m)
 	}
 	return nil
 }
@@ -115,14 +114,25 @@ func writeNewSettings(args *Args) error {
 		return err
 	}
 
-	for section, _ := range sections {
-		raw := map[string]interface{}{}
-		if err := conf.Unmarshal(section, &raw); err != nil {
+	for section := range sections {
+		if err := printSection(section, conf); err != nil {
 			return err
 		}
-		log.Printf("section: '%s', values: '%s'", section, raw)
 	}
 
+	return nil
+}
+
+func printSection(section string, conf *config.Config) error {
+	var m map[string]interface{}
+	if err := conf.Unmarshal(section, &m); err != nil {
+		return err
+	}
+	t, err := toml.TreeFromMap(map[string]interface{}{section: m})
+	if err != nil {
+		return err
+	}
+	log.Println(t)
 	return nil
 }
 
