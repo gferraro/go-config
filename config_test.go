@@ -275,13 +275,11 @@ func TestNotWritingZeroValues(t *testing.T) {
 
 	newNow()
 	locationMap := map[string]interface{}{
-		"lAtitUde":  "123.321",
-		"TiMestamp": now().Format(TimeFormat),
+		"lAtitUde": "123.321",
 	}
 	locationMapExpected := map[string]interface{}{
-		"latitude":  float32(123.321),
-		"timestamp": now().Truncate(time.Second),
-		"updated":   now(),
+		"latitude": float32(123.321),
+		"updated":  now(),
 	}
 	require.NoError(t, conf.SetFromMap(LocationKey, locationMap, false))
 	require.Equal(t, locationMapExpected, (conf.v.AllSettings()[LocationKey]))
