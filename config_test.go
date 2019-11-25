@@ -268,6 +268,25 @@ func TestMapToLocation(t *testing.T) {
 	equalLocation(t, locationExpected, location)
 }
 
+func TestNotWritingZeroValues(t *testing.T) {
+	defer newFs(t, "")()
+	conf, err := New(DefaultConfigDir)
+	require.NoError(t, err)
+
+	newNow()
+	locationMap := map[string]interface{}{
+		"lAtitUde":  "123.321",
+		"TiMestamp": now().Format(TimeFormat),
+	}
+	locationMapExpected := map[string]interface{}{
+		"latitude":  float32(123.321),
+		"timestamp": now().Truncate(time.Second),
+		"updated":   now(),
+	}
+	require.NoError(t, conf.SetFromMap(LocationKey, locationMap, false))
+	require.Equal(t, locationMapExpected, (conf.v.AllSettings()[LocationKey]))
+}
+
 func TestMapToAudio(t *testing.T) {
 	defer newFs(t, "")()
 	conf, err := New(DefaultConfigDir)

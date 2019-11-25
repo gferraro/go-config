@@ -29,6 +29,7 @@ import (
 	"github.com/gofrs/flock"
 	"github.com/mitchellh/mapstructure"
 	"github.com/spf13/afero"
+	"github.com/spf13/cast"
 	"github.com/spf13/viper"
 
 	toml "github.com/pelletier/go-toml"
@@ -129,6 +130,7 @@ func (c *Config) SetFromMap(sectionKey string, newConfig map[string]interface{},
 		return err
 	}
 
+	// Convert to section for type conversion and other checks
 	section := allSections[sectionKey]
 	newStruct, err := section.mapToStruct(newConfig)
 	if err != nil {
@@ -140,7 +142,17 @@ func (c *Config) SetFromMap(sectionKey string, newConfig map[string]interface{},
 		return err
 	}
 
-	return c.Set(sectionKey, newStruct)
+	// Pull out parts from section for writing to config as to not write zero values
+	newMap, err := interfaceToMap(newStruct)
+	newMap = copyAndInsensitiviseMap(newMap)
+	for key := range newConfig {
+		val, ok := newMap[strings.ToLower(key)]
+		if !ok {
+			return fmt.Errorf("could not find key '%s' in map", key)
+		}
+		newConfig[key] = val
+	}
+	return c.Set(sectionKey, newConfig)
 }
 
 func (c *Config) SetField(sectionKey, valueKey, value string, force bool) error {
@@ -323,4 +335,25 @@ func deepSearch(m map[string]interface{}, path []string) (map[string]interface{}
 		m = m3
 	}
 	return m, nil
+}
+
+// From viper library: https://github.com/spf13/viper/blob/master/util.go#L51
+// copyAndInsensitiviseMap behaves like insensitiviseMap, but creates a copy of
+// any map it makes case insensitive.
+func copyAndInsensitiviseMap(m map[string]interface{}) map[string]interface{} {
+	nm := make(map[string]interface{})
+
+	for key, val := range m {
+		lkey := strings.ToLower(key)
+		switch v := val.(type) {
+		case map[interface{}]interface{}:
+			nm[lkey] = copyAndInsensitiviseMap(cast.ToStringMap(v))
+		case map[string]interface{}:
+			nm[lkey] = copyAndInsensitiviseMap(v)
+		default:
+			nm[lkey] = v
+		}
+	}
+
+	return nm
 }
