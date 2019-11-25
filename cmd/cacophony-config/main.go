@@ -8,6 +8,7 @@ import (
 
 	config "github.com/TheCacophonyProject/go-config"
 	"github.com/alexflint/go-arg"
+	"github.com/pelletier/go-toml"
 )
 
 var version = "<not set>"
@@ -16,6 +17,8 @@ type Args struct {
 	ConfigDir string   `arg:"-c,--config" help:"path to configuration directory"`
 	Write     bool     `arg:"-w,--write" help:"write to config file"`
 	Read      bool     `arg:"-r,--read" help:"read from the config file"`
+	Delete    bool     `arg:"-d,--delete" help:"delete from config file"`
+	Force     bool     `arg:"-f,--force" help:"force writing to config if invalid keys are found"`
 	Input     []string `arg:"positional"`
 }
 
@@ -47,7 +50,24 @@ func runMain() error {
 	if args.Read {
 		return readConfig(&args)
 	}
+	if args.Delete {
+		return deleteConfig(&args)
+	}
 	return errors.New("no valid arguments given")
+}
+
+func deleteConfig(args *Args) error {
+	conf, err := config.New(args.ConfigDir)
+	if err != nil {
+		return err
+	}
+	for _, key := range args.Input {
+		if err := conf.Unset(key); err != nil {
+			return err
+		}
+		log.Printf("deleted '%s'", key)
+	}
+	return nil
 }
 
 func readConfig(args *Args) error {
@@ -57,11 +77,9 @@ func readConfig(args *Args) error {
 	}
 
 	for _, section := range args.Input {
-		var m map[string]interface{}
-		if err := conf.Unmarshal(section, &m); err != nil {
+		if err := printSection(section, conf); err != nil {
 			return err
 		}
-		log.Printf("section: '%s', values: '%s'", section, m)
 	}
 	return nil
 }
@@ -87,7 +105,7 @@ func writeNewSettings(args *Args) error {
 
 	sections := map[string]struct{}{}
 	for _, s := range settings {
-		if err := conf.SetField(s.section, s.field, s.value); err != nil {
+		if err := conf.SetField(s.section, s.field, s.value, args.Force); err != nil {
 			return err
 		}
 		sections[s.section] = struct{}{}
@@ -96,14 +114,25 @@ func writeNewSettings(args *Args) error {
 		return err
 	}
 
-	for section, _ := range sections {
-		raw := map[string]interface{}{}
-		if err := conf.Unmarshal(section, &raw); err != nil {
+	for section := range sections {
+		if err := printSection(section, conf); err != nil {
 			return err
 		}
-		log.Printf("section: '%s', values: '%s'", section, raw)
 	}
 
+	return nil
+}
+
+func printSection(section string, conf *config.Config) error {
+	var m map[string]interface{}
+	if err := conf.Unmarshal(section, &m); err != nil {
+		return err
+	}
+	t, err := toml.TreeFromMap(map[string]interface{}{section: m})
+	if err != nil {
+		return err
+	}
+	log.Println(t)
 	return nil
 }
 

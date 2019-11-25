@@ -29,6 +29,7 @@ import (
 	"github.com/gofrs/flock"
 	"github.com/mitchellh/mapstructure"
 	"github.com/spf13/afero"
+	"github.com/spf13/cast"
 	"github.com/spf13/viper"
 
 	toml "github.com/pelletier/go-toml"
@@ -117,7 +118,7 @@ func (c *Config) Set(key string, value interface{}) error {
 }
 
 // SetFromMap can only update one section at a time.
-func (c *Config) SetFromMap(sectionKey string, newConfig map[string]interface{}) error {
+func (c *Config) SetFromMap(sectionKey string, newConfig map[string]interface{}, force bool) error {
 	if !checkIfSectionKey(sectionKey) {
 		return notSectionKeyError(sectionKey)
 	}
@@ -129,16 +130,32 @@ func (c *Config) SetFromMap(sectionKey string, newConfig map[string]interface{})
 		return err
 	}
 
+	// Convert to section for type conversion and other checks
 	section := allSections[sectionKey]
 	newStruct, err := section.mapToStruct(newConfig)
 	if err != nil {
+		if force {
+			// If failed to convert new config map to a struct of that section then
+			// try writing to section with a map instead.
+			return c.Set(sectionKey, newConfig)
+		}
 		return err
 	}
 
-	return c.Set(sectionKey, newStruct)
+	// Pull out parts from section for writing to config as to not write zero values
+	newMap, err := interfaceToMap(newStruct)
+	newMap = copyAndInsensitiviseMap(newMap)
+	for key := range newConfig {
+		val, ok := newMap[strings.ToLower(key)]
+		if !ok {
+			return fmt.Errorf("could not find key '%s' in map", key)
+		}
+		newConfig[key] = val
+	}
+	return c.Set(sectionKey, newConfig)
 }
 
-func (c *Config) SetField(sectionKey, valueKey, value string) error {
+func (c *Config) SetField(sectionKey, valueKey, value string, force bool) error {
 	if !checkIfSectionKey(sectionKey) {
 		return notSectionKeyError(sectionKey)
 	}
@@ -148,7 +165,7 @@ func (c *Config) SetField(sectionKey, valueKey, value string) error {
 	c.Unmarshal(section.key, &s)
 	s[valueKey] = value
 	delete(s, "updated")
-	return c.SetFromMap(sectionKey, s)
+	return c.SetFromMap(sectionKey, s, force)
 }
 
 func (c *Config) Update() error {
@@ -168,7 +185,12 @@ func (c *Config) StrictSet(key string, value interface{}, time time.Time) error 
 
 func (c *Config) Unset(key string) error {
 	configMap := c.v.AllSettings()
-	delete(configMap, key)
+	path := strings.Split(key, ".")
+	deepestMap, err := deepSearch(configMap, path[0:len(path)-1])
+	if err != nil {
+		return err
+	}
+	delete(deepestMap, path[len(path)-1])
 	tomlTree, err := toml.TreeFromMap(configMap)
 	if err != nil {
 		return err
@@ -186,7 +208,7 @@ func (c *Config) Unset(key string) error {
 	if err := c.v.ReadConfig(bytes.NewReader(buf.Bytes())); err != nil {
 		return err
 	}
-	c.v.Set(key+".updated", now())
+	c.v.Set(path[0]+".updated", now())
 	if c.AutoWrite {
 		return c.v.WriteConfig()
 	}
@@ -292,4 +314,46 @@ func stringToTime(f reflect.Type, t reflect.Type, data interface{}) (interface{}
 		return data, nil
 	}
 	return time.Parse(TimeFormat, data.(string))
+}
+
+// Slightly edited from viper library: https://github.com/spf13/viper/blob/master/util.go#L199
+// deepSearch scans deep maps, following the key indexes listed in the
+// sequence "path".
+// The last value is expected to be another map, and is returned.
+//
+// In case intermediate keys do not exist, or map to a non-map value, an error is returned
+func deepSearch(m map[string]interface{}, path []string) (map[string]interface{}, error) {
+	for _, k := range path {
+		m2, ok := m[k]
+		if !ok {
+			return m, errors.New("error with following path in map")
+		}
+		m3, ok := m2.(map[string]interface{})
+		if !ok {
+			return m, errors.New("error with following path in map")
+		}
+		m = m3
+	}
+	return m, nil
+}
+
+// From viper library: https://github.com/spf13/viper/blob/master/util.go#L51
+// copyAndInsensitiviseMap behaves like insensitiviseMap, but creates a copy of
+// any map it makes case insensitive.
+func copyAndInsensitiviseMap(m map[string]interface{}) map[string]interface{} {
+	nm := make(map[string]interface{})
+
+	for key, val := range m {
+		lkey := strings.ToLower(key)
+		switch v := val.(type) {
+		case map[interface{}]interface{}:
+			nm[lkey] = copyAndInsensitiviseMap(cast.ToStringMap(v))
+		case map[string]interface{}:
+			nm[lkey] = copyAndInsensitiviseMap(v)
+		default:
+			nm[lkey] = v
+		}
+	}
+
+	return nm
 }
