@@ -35,12 +35,15 @@ func init() {
 }
 
 type Modemd struct {
-	TestInterval      time.Duration `mapstructure:"test-interval"`
-	InitialOnDuration time.Duration `mapstructure:"initial-on-duration"`
-	FindModemTimeout  time.Duration `mapstructure:"find-modem-timeout"`
-	ConnectionTimeout time.Duration `mapstructure:"connection-timeout"`
-	RequestOnDuration time.Duration `mapstructure:"request-on-duration"`
-	Modems            []Modem       `mapstructure:"modems"`
+	TestInterval          time.Duration `mapstructure:"test-interval"`
+	InitialOnDuration     time.Duration `mapstructure:"initial-on-duration"`
+	FindModemTimeout      time.Duration `mapstructure:"find-modem-timeout"`
+	ConnectionTimeout     time.Duration `mapstructure:"connection-timeout"`
+	RequestOnDuration     time.Duration `mapstructure:"request-on-duration"`
+	MinTimeFromFailedConn time.Duration `mapstructure:"min-time-from-failed-connection"`
+	MinConnDuration       time.Duration `mapstructure:"min-connection-duration"`
+	MaxOffDuration        time.Duration `mapstructure:"max-off-duration"`
+	Modems                []Modem       `mapstructure:"modems"`
 }
 
 type Modem struct {
@@ -51,11 +54,14 @@ type Modem struct {
 
 func DefaultModemd() Modemd {
 	return Modemd{
-		TestInterval:      time.Minute * 5,
-		InitialOnDuration: time.Hour * 24,
-		FindModemTimeout:  time.Minute * 2,
-		ConnectionTimeout: time.Minute,
-		RequestOnDuration: time.Hour * 24,
+		TestInterval:          time.Minute * 5,
+		InitialOnDuration:     time.Hour * 24,
+		FindModemTimeout:      time.Minute * 2,
+		ConnectionTimeout:     time.Minute,
+		RequestOnDuration:     time.Hour * 24,
+		MinTimeFromFailedConn: time.Minute * 20,
+		MinConnDuration:       time.Minute,
+		MaxOffDuration:        time.Hour * 24,
 		Modems: []Modem{
 			Modem{Name: "Huawei 4G modem", NetDev: "eth1", VendorProductID: "12d1:14db"},
 			Modem{Name: "Spark 3G modem", NetDev: "usb0", VendorProductID: "19d2:1405"},
