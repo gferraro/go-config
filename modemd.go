@@ -40,6 +40,9 @@ type Modemd struct {
 	FindModemTimeout  time.Duration `mapstructure:"find-modem-timeout"`
 	ConnectionTimeout time.Duration `mapstructure:"connection-timeout"`
 	RequestOnDuration time.Duration `mapstructure:"request-on-duration"`
+	RetryInterval     time.Duration `mapstructure:"retry-interval"`
+	MinConnDuration   time.Duration `mapstructure:"min-connection-duration"`
+	MaxOffDuration    time.Duration `mapstructure:"max-off-duration"`
 	Modems            []Modem       `mapstructure:"modems"`
 }
 
@@ -56,6 +59,9 @@ func DefaultModemd() Modemd {
 		FindModemTimeout:  time.Minute * 2,
 		ConnectionTimeout: time.Minute,
 		RequestOnDuration: time.Hour * 24,
+		RetryInterval:     time.Minute * 20,
+		MinConnDuration:   time.Minute,
+		MaxOffDuration:    time.Hour * 24,
 		Modems: []Modem{
 			Modem{Name: "Huawei 4G modem", NetDev: "eth1", VendorProductID: "12d1:14db"},
 			Modem{Name: "Spark 3G modem", NetDev: "usb0", VendorProductID: "19d2:1405"},
