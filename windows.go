@@ -37,8 +37,8 @@ func DefaultWindows() Windows {
 	return Windows{
 		StartRecording: "-30m",
 		StopRecording:  "+30m",
-		PowerOn:        "12:00",
-		PowerOff:       "12:00",
+		PowerOn:        "-30m",
+		PowerOff:       "+30m",
 	}
 }
 
