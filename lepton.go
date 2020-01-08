@@ -33,7 +33,7 @@ type Lepton struct {
 
 func DefaultLepton() Lepton {
 	return Lepton{
-		SPISpeed:    2000000,
+		SPISpeed:    20000000,
 		FrameOutput: "/var/run/lepton-frames",
 	}
 }
